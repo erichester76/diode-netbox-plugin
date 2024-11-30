@@ -74,7 +74,7 @@
             <div class="col col-6">
 
                 <div class="row">
-                <div class="card border-red">
+                    <div class="card border-red">
                     <h5 class="card-header text-red">{% trans "Failed Entities" %}</h5>
                     <ul class="list-group list-group-flush"> 
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
@@ -92,7 +92,7 @@
                 </div>
 
                 <div class="row">
-                <div class="card border-yellow">
+                    <div class="card border-yellow">
                     <h5 class="card-header text-yellow">{% trans "Reconciled Entities" %}</h5>
                     <ul class="list-group list-group-flush">
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
@@ -129,24 +129,24 @@
 
             </div>
         </div>
+
         <div class="row">
 
             <div class="col col-6">
                 <div class="card border-blue">
-                    <h5 class="card-header text-blue">{% trans "Ingested Entities" %}</h5>
-                    <ul class="list-group list-group-flush">
+                <h5 class="card-header text-blue">{% trans "Ingested Entities" %}</h5>
+                <ul class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                    {% trans "Total" %}<span class="badge">{{ ingestion_metrics.total }}</span>
+                    </a>
+                    {% with object_metrics.total as ometrics %}
+                        {% for object_type, count in ometrics.items %}
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                        {% trans "Total" %}<span class="badge">{{ ingestion_metrics.total }}</span>
-                        </a>
-                        {% with object_metrics.total as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                        {% endwith %}
-                    </ul>
-                    </div>
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                    {% endwith %}
+                </ul>
                 </div>
             </div>
 
@@ -167,22 +167,20 @@
                     </ul>
                     </div>
                 </div>
-            </div>
 
         </div>
         <div class="row">
 
-                <div class="col col-md-12">
-                    <div class="card">
-                        <div class="table-responsive">
-                            {% render_table ingestion_logs_table %}
-                        </div>
+            <div class="col col-md-12">
+                <div class="card">
+                    <div class="table-responsive">
+                        {% render_table ingestion_logs_table %}
                     </div>
                 </div>
-            {% endif %}
-           </div>
-      </div>
-    </div>
+            </div>
+    {% endif %}
+
+        </div>
 </div>
 
 {% endif %}
