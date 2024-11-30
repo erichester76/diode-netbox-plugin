@@ -2,12 +2,12 @@
 # Copyright 2024 NetBox Labs Inc
 """Diode NetBox Plugin - API Views."""
 
+import logging
 from typing import Any, Dict, Optional
 
 from django.conf import settings
 from packaging import version
 from django.core.cache import cache
-from django.core.exceptions import FieldError
 from django.db import transaction
 from django.db.models import Q
 from extras.models import CachedValue
@@ -29,6 +29,31 @@ if version.parse(settings.VERSION).major >= 4:
 else:
     from django.contrib.contenttypes.models import ContentType as NetBoxType
 
+# Logger for debugging
+logger = logging.getLogger(__name__)
+
+
+def get_dynamic_queryset(model_class, object_data, lookups=None):
+    """
+    Limit queryset fields dynamically based on incoming data and lookups.
+
+    Args:
+        model_class: Django model class for the object type.
+        object_data: Dict of incoming data fields to determine needed fields.
+        lookups: Optional list of prefetch-related fields.
+
+    Returns:
+        A QuerySet with limited fields and related lookups.
+    """
+    requested_fields = list(object_data.keys())  # Fields from incoming data
+    prefetch_fields = lookups or []
+
+    # Combine requested fields with prefetch-related fields (flattened)
+    selected_fields = set(requested_fields + [field.split("__")[0] for field in prefetch_fields])
+
+    # Apply field selection and prefetching
+    return model_class.objects.only(*selected_fields).prefetch_related(*prefetch_fields)
+
 
 class ObjectStateView(views.APIView):
     """ObjectState view."""
@@ -41,6 +66,7 @@ class ObjectStateView(views.APIView):
         lookups = cache.get(cache_key)
 
         if not lookups:
+            logger.info(f"Fetching lookups for {object_type_model}")
             if "'ipam.models.ip.ipaddress'" in object_type_model:
                 lookups = (
                     "assigned_object",
@@ -53,7 +79,6 @@ class ObjectStateView(views.APIView):
                 lookups = ("site",)
             else:
                 lookups = ()
-
             cache.set(cache_key, lookups, timeout=3600)  # Cache for 1 hour
 
         return lookups
@@ -69,6 +94,7 @@ class ObjectStateView(views.APIView):
         object_content_type = cache.get(cache_key)
 
         if not object_content_type:
+            logger.info(f"Fetching object type: {object_type}")
             object_content_type = NetBoxType.objects.get_by_natural_key(
                 app_label, model_name
             )
@@ -76,6 +102,8 @@ class ObjectStateView(views.APIView):
 
         object_type_model = object_content_type.model_class()
         object_id = request.query_params.get("id")
+
+        object_data = request.query_params.dict()  # Use request parameters as a baseline for fields
 
         if object_id:
             queryset = object_type_model.objects.filter(id=object_id)
@@ -89,10 +117,10 @@ class ObjectStateView(views.APIView):
                 "object_id", flat=True
             )
 
-            queryset = object_type_model.objects.filter(id__in=cached_values)
             lookups = self._get_lookups(str(object_type_model).lower())
-            if lookups:
-                queryset = queryset.prefetch_related(*lookups)
+            queryset = get_dynamic_queryset(
+                object_type_model, object_data={"q": search_value}, lookups=lookups
+            ).filter(id__in=cached_values)
 
         serializer = ObjectStateSerializer(
             queryset,
@@ -116,6 +144,7 @@ class ApplyChangeSetView(views.APIView):
         model_class = cache.get(cache_key)
 
         if not model_class:
+            logger.info(f"Fetching model class for {object_type}")
             object_content_type = NetBoxType.objects.get_by_natural_key(
                 app_label, model_name
             )
@@ -125,51 +154,45 @@ class ApplyChangeSetView(views.APIView):
         return model_class
 
     def post(self, request, *args, **kwargs):
-        """Apply change sets with caching and batch operations."""
+        """Apply change sets with dynamic queryset handling."""
         serializer = ApplyChangeSetRequestSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         change_set = serializer.validated_data["change_set"]
-        grouped_changes = {}
-        for change in change_set:
-            grouped_changes.setdefault(change["object_type"], []).append(change)
-
         serializer_errors = []
 
         try:
             with transaction.atomic():
-                for object_type, changes in grouped_changes.items():
+                for change in change_set:
+                    object_type = change["object_type"]
+                    change_type = change["change_type"]
+                    object_data = {
+                        key: value
+                        for key, value in change["data"].items()
+                        if value not in [None, "undefined"]
+                    }
+                    object_id = change.get("object_id", None)
+
                     model_class = self._get_object_type_model(object_type)
-                    change_data = []
-
-                    for change in changes:
-                        change_type = change["change_type"]
-                        object_data = change["data"]
-                        object_id = change.get("object_id")
-
-                        if change_type == "create":
-                            change_data.append(model_class(**object_data))
-                        elif change_type == "update":
-                            instance = model_class.objects.get(id=object_id)
-                            for attr, value in object_data.items():
-                                setattr(instance, attr, value)
-                            change_data.append(instance)
-                        else:
-                            serializer_errors.append(
-                                {"error": f"Invalid change_type: {change_type}"}
-                            )
 
                     if change_type == "create":
-                        model_class.objects.bulk_create(change_data)
-                    elif change_type == "update":
-                        model_class.objects.bulk_update(
-                            change_data, fields=[f.name for f in model_class._meta.fields]
+                        instance = model_class(**object_data)
+                        instance.save()
+                    elif change_type == "update" and object_id:
+                        instance = model_class.objects.get(id=object_id)
+                        for attr, value in object_data.items():
+                            setattr(instance, attr, value)
+                        instance.save()
+                    else:
+                        serializer_errors.append(
+                            {"error": f"Invalid change_type or missing object_id: {change_type}"}
                         )
 
                 if serializer_errors:
-                    raise Exception("Errors occurred in change set processing")
+                    raise Exception("Errors occurred during change set processing")
         except Exception as e:
+            logger.error(f"Error during ApplyChangeSetView: {e}")
             return Response({"errors": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"result": "success"}, status=status.HTTP_200_OK)
