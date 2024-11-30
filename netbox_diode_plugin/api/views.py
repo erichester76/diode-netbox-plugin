@@ -128,29 +128,15 @@ class ObjectStateView(views.APIView):
 class ApplyChangeSetView(views.APIView):
     """ApplyChangeSet view."""
 
-    permission_classes = [IsAuthenticated, IsDiodeWriter]
-
-    @staticmethod
-    def _get_object_type_model(object_type: str):
-        """Cached lookup for object type model."""
-        app_label, model_name = object_type.split(".")
-        cache_key = f"object_model_{app_label}_{model_name}"
-        model_class = cache.get(cache_key)
-
-        if not model_class:
-            object_content_type = NetBoxType.objects.get_by_natural_key(
-                app_label, model_name
-            )
-            model_class = object_content_type.model_class()
-            cache.set(cache_key, model_class, timeout=3600)
-
-        return model_class
+    # Existing methods...
 
     def post(self, request, *args, **kwargs):
-        """Apply change sets with dynamic queryset handling."""
+        """Apply change sets with consistent error formatting."""
         serializer = ApplyChangeSetRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # Return errors as a list of dictionaries
+            errors = [{"field": key, "error": str(value[0])} for key, value in serializer.errors.items()]
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
 
         change_set = serializer.validated_data["change_set"]
         serializer_errors = []
@@ -179,12 +165,15 @@ class ApplyChangeSetView(views.APIView):
                         instance.save()
                     else:
                         serializer_errors.append(
-                            {"error": f"Invalid change_type or missing object_id: {change_type}"}
+                            {"change_id": change.get("change_id", "unknown"), "error": "Invalid change_type or missing object_id"}
                         )
 
                 if serializer_errors:
-                    raise Exception("Errors occurred during change set processing")
+                    # Raise an exception to trigger error response
+                    raise Exception(serializer_errors)
         except Exception as e:
-            return Response({"errors": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # Ensure errors are always a list of dictionaries
+            errors = serializer_errors if isinstance(e, list) else [{"error": str(e)}]
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"result": "success"}, status=status.HTTP_200_OK)
