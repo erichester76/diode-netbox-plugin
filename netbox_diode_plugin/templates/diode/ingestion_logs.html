@@ -4,7 +4,7 @@
 {% load render_table from django_tables2 %}
 {% load i18n %}
 
-{% block title %}{% trans "Ingestion Logs" %}{% endblock %}
+{% block title %}{% trans "Diode Ingestion Activity" %}{% endblock %}
 
 {% block content %}
 
@@ -13,129 +13,176 @@
     <h4 class="alert-heading">{% trans "Error" %}</h4>
     <p>{{ netbox_to_diode_user_error }}</p>
 </div>
-{% elif ingestion_logs_error %}
-<div class="alert alert-danger mt-3" role="alert">
-    <h4 class="alert-heading">{% trans "Error" %}</h4>
-    <p>{{ ingestion_logs_error.status_code }}: {{ ingestion_logs_error.details }}</p>
-</div>
 {% else %}
-<div>
-    <div class="row mb-3">
-        <div class="col col-md-12">
-            <div class="card p-3">
-                <div class="row d-flex flex-wrap justify-content-evenly">
-                    <div class="w-auto p-0">
-                        <canvas id="ingestions-queued"></canvas>
-                        <div class="text-center metric-label">Queued</div>
-                    </div>
-                    <div class="w-auto p-0">
-                        <canvas id="ingestions-reconciled"></canvas>
-                        <div class="text-center metric-label">Changes</div>
-                    </div>
-                    <div class="w-auto p-0">
-                        <canvas id="ingestions-failed"></canvas>
-                        <div class="text-center metric-label">Failed</div>
-                    </div>
-                    <div class="w-auto p-0">
-                        <canvas id="ingestions-no-changes"></canvas>
-                        <div class="text-center metric-label">No Changes</div>
-                    </div>
-                    <div class="w-auto p-0">
-                        <canvas id="ingestions-total"></canvas>
-                        <div class="text-center metric-label">Total</div>
-                    </div>
+ 
+<div class="col col-12">
+
+        <div class="row">
+            <div class="col col-md-7">
+                <div class="card">
+                <h5 class="card-header">{% trans "Diode Status" %}</h5>
+                <table class="table table-hover attr-table">
+                    <tr>
+                        <th scope="row">{% trans "Server" %}</th>
+                        <td>{{ diode_target }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Status" %}</th>
+                        <td class="d-flex justify-content-between">
+                        {% if ingestion_logs_error %}
+                            {% trans "Offline" as status %}
+                            {% badge status "red" %}
+                        {% elif ingestion_metrics.queued > 0 %}
+                            {% trans "Ingesting" as status %}
+                            {% badge status "blue" %}  
+                        {% else %}
+                            {% trans "Online" as status %}
+                            {% badge status "green" %}                    
+                        {% endif %}
+                        {% if ingestion_logs_error %}
+                            </td></tr><tr><td>
+                            <span class="text-red">
+                            <i class="mdi mdi-alert"></i>
+                            <p>{{ ingestion_logs_error.status_code }}: {{ ingestion_logs_error.details }}</p>
+                            </span>
+                        {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Unique Requests" %}</th>
+                        <td>0</td>
+                    </tr>         
+                    <tr>
+                        <th scope="row">{% trans "Unique Producers" %}</th>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Unique SDKs" %}</th>
+                        <td>0</td>
+                    </tr>                        
+                    <tr>
+                        <th scope="row">{% trans "Last Activity" %}</th>
+                        <td>Never</td>
+                    </tr>                
+        
+                </table>
+                </div>
+
+            </div>
+
+            {% if not ingestion_logs_error %}
+            <div class="col col-5">
+
+                <div class="row">
+                <div class="card border-red">
+                    <h5 class="card-header text-red">{% trans "Failed Entities" %}</h5>
+                    <ul class="list-group list-group-flush"> 
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.failed }}</span>
+                        </a>     
+                        {% with object_metrics.failed as ometrics %}
+                            {% for object_type, count in ometrics.items %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                                {{ object_type }}<span class="badge">{{ count }}</span>
+                            </a>                        
+                            {% endfor %}
+                        {% endwith %}
+                    </ul>
+                </div>
+                </div>
+
+                <div class="row">
+                <div class="card border-yellow">
+                    <h5 class="card-header text-yellow">{% trans "Reconciled Entities" %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.reconciled }}</span>
+                        </a> 
+                        {% with object_metrics.reconciled as ometrics %}
+                            {% for object_type, count in ometrics.items %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                                {{ object_type }}<span class="badge">{{ count }}</span>
+                            </a>                        
+                            {% endfor %}
+                        {% endwith %}        
+                    </ul>
+                </div>
+                </div>
+
+                <div class="row">
+                    <div class="card border-green">
+                    <h5 class="card-header text-green">{% trans "Unchanged Entities" %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.no_changes }}</span>
+                        </a>
+                        {% with object_metrics.no_changes as ometrics %}
+                            {% for object_type, count in ometrics.items %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                                {{ object_type }}<span class="badge">{{ count }}</span>
+                            </a>                        
+                            {% endfor %}
+                        {% endwith %}
+                    </ul>
+                </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row mb-3">
-        <div class="col col-md-12">
-            <div class="card">
-                <div class="table-responsive">
-                    {% render_table ingestion_logs_table 'diode/ingestion_logs_table.html' %}
-                    {% if ingestion_logs_table.data %}
-                        {% include 'diode/ingestion_logs_paginator.html' with next_page_token=next_page_token total_count=total_count %}
-                    {% endif %}
+        <div class="row">
+
+            <div class="col col-6">
+                <div class="card border-blue">
+                    <h5 class="card-header text-blue">{% trans "Ingested Entities" %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                        {% trans "Total" %}<span class="badge">{{ ingestion_metrics.total }}</span>
+                        </a>
+                        {% with object_metrics.total as ometrics %}
+                            {% for object_type, count in ometrics.items %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                                {{ object_type }}<span class="badge">{{ count }}</span>
+                            </a>                        
+                            {% endfor %}
+                        {% endwith %}
+                    </ul>
+                </div>
+                </div>
+
+                <div class="col col-6">
+                <div class="card border-yellow">
+                    <h5 class="card-header text-yellow">{% trans "Queued Entities" %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.queued }}</span>
+                        </a>
+                        {% with object_metrics.queued as ometrics %}
+                            {% for object_type, count in ometrics.items %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                                {{ object_type }}<span class="badge">{{ count }}</span>
+                            </a>                        
+                            {% endfor %}
+                        {% endwith %}     
+                    </ul>
+                </div>
                 </div>
             </div>
+
         </div>
+        <div class="row">
+
+                <div class="col col-md-12">
+                    <div class="card">
+                        <div class="table-responsive">
+                            {% render_table ingestion_logs_table %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+           </div>
+      </div>
     </div>
 </div>
-<script type="text/javascript">
-    function drawGauge(ctx, value, color) {
-        const pixelRatio = window.devicePixelRatio || 1;
-        const width = ctx.canvas.parentElement.querySelector('div.metric-label').clientWidth;
-        const height = width/2;
 
-        // Scale the canvas
-        ctx.canvas.width = width * pixelRatio;
-        ctx.canvas.height = height * pixelRatio;
-        ctx.canvas.style.width = `${width}px`;
-        ctx.canvas.style.height = `${height}px`;
-        ctx.scale(pixelRatio, pixelRatio);
-
-        const startAngle = Math.PI;
-        const endAngle = 2 * Math.PI;
-        const radius = 80;
-        const centerX = width / 2;
-        const centerY = height;
-        const totalIngestions = {{ ingestion_metrics.total }};
-
-        // Clear the canvas
-        ctx.clearRect(0, 0, width, height);
-
-        // Draw the background arc
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-        ctx.lineWidth = 20;
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.stroke();
-
-        // Draw the foreground arc
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, startAngle, startAngle + (value / totalIngestions) * Math.PI);
-        ctx.lineWidth = 20;
-        ctx.strokeStyle = color || '#007bff';
-        ctx.stroke();
-
-        // Detect dark mode
-        const body = document.querySelector('body');
-        const isDarkMode = body.hasAttribute('data-bs-theme') && body.getAttribute('data-bs-theme') === 'dark';
-
-        // Draw the text
-        ctx.font = '18px Arial';
-        ctx.fillStyle = isDarkMode ? '#FFF' : '#000';
-        ctx.textAlign = 'center';
-        ctx.fillText(value, centerX, centerY - 10);
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        function redrawMetrics() {
-            drawGauge(document.getElementById('ingestions-queued').getContext('2d'), {{ ingestion_metrics.queued }}, '#FFFF00');
-            drawGauge(document.getElementById('ingestions-reconciled').getContext('2d'), {{ ingestion_metrics.reconciled }}, '#4CAF50');
-            drawGauge(document.getElementById('ingestions-failed').getContext('2d'), {{ ingestion_metrics.failed }}, '#FF0000');
-            drawGauge(document.getElementById('ingestions-no-changes').getContext('2d'), {{ ingestion_metrics.no_changes }}, '#40E0D0');
-            drawGauge(document.getElementById('ingestions-total').getContext('2d'), {{ ingestion_metrics.total }}, '#0D6EFD');
-        }
-
-        redrawMetrics()
-
-        // Observe changes to the data-bs-theme attribute on the body tag
-        const body = document.querySelector('body');
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-bs-theme') {
-                    redrawMetrics();
-                }
-            });
-        });
-
-        observer.observe(body, { attributes: true });
-        window.addEventListener('resize', function() {
-            redrawMetrics()
-        });
-    });
-</script>
 {% endif %}
 
 {% endblock content %}
