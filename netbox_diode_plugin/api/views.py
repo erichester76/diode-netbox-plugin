@@ -2,7 +2,6 @@
 # Copyright 2024 NetBox Labs Inc
 """Diode NetBox Plugin - API Views."""
 
-import logging
 from typing import Any, Dict, Optional
 
 from django.conf import settings
@@ -28,9 +27,6 @@ if version.parse(settings.VERSION).major >= 4:
     from core.models import ObjectType as NetBoxType
 else:
     from django.contrib.contenttypes.models import ContentType as NetBoxType
-
-# Logger for debugging
-logger = logging.getLogger(__name__)
 
 
 def get_dynamic_queryset(model_class, object_data, lookups=None):
@@ -66,7 +62,6 @@ class ObjectStateView(views.APIView):
         lookups = cache.get(cache_key)
 
         if not lookups:
-            logger.info(f"Fetching lookups for {object_type_model}")
             if "'ipam.models.ip.ipaddress'" in object_type_model:
                 lookups = (
                     "assigned_object",
@@ -94,7 +89,6 @@ class ObjectStateView(views.APIView):
         object_content_type = cache.get(cache_key)
 
         if not object_content_type:
-            logger.info(f"Fetching object type: {object_type}")
             object_content_type = NetBoxType.objects.get_by_natural_key(
                 app_label, model_name
             )
@@ -144,7 +138,6 @@ class ApplyChangeSetView(views.APIView):
         model_class = cache.get(cache_key)
 
         if not model_class:
-            logger.info(f"Fetching model class for {object_type}")
             object_content_type = NetBoxType.objects.get_by_natural_key(
                 app_label, model_name
             )
@@ -192,7 +185,6 @@ class ApplyChangeSetView(views.APIView):
                 if serializer_errors:
                     raise Exception("Errors occurred during change set processing")
         except Exception as e:
-            logger.error(f"Error during ApplyChangeSetView: {e}")
             return Response({"errors": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"result": "success"}, status=status.HTTP_200_OK)
