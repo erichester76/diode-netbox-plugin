@@ -103,7 +103,9 @@ class IngestionLogsView(View):
                     next_token = resp.next_page_token
                     
                 for log in serialized_logs:
+                    print(f"{log}")
                     state = self.state_mapping.get(log['state']).lower()
+                    print(f"{state}")
                     object_type = log['object_type']
 
                     if state not in objmetrics:
