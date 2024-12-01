@@ -101,14 +101,14 @@ class IngestionLogsView(View):
 
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-                    serialized_logs=[MessageToDict(log, use_integers_for_enums=True) for log in resp.logs]
+                    serialized_logs=[MessageToDict(log) for log in resp.logs]
                     cache.set(cache_key, serialized_logs, timeout=300) 
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
                     
                 for log in serialized_logs:
-                    state = self.state_mapping.get(int(log['state']))
-                    log['state']=" ".join(state.title().split("_"))
+                    log['state']=" ".join(log['state'].title().split("_"))
+                    state = log['state']
                     object_type = log['data_type']
 
                     if state not in objmetrics:
@@ -130,7 +130,7 @@ class IngestionLogsView(View):
                         seen[log['sdk_name']]=True
                         sdks += 1
                     
-                filtered_logs = [log for log in serialized_logs if int(log['state']) == 3]
+                filtered_logs = [log for log in serialized_logs if log['state'] == 'FAILED']
                 logs.extend(filtered_logs)
                 
                 if not next_token:
