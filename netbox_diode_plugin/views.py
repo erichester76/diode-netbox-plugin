@@ -114,21 +114,22 @@ class IngestionLogsView(View):
 
                 objmetrics[state][object_type] += 1
                 
-                ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
-                    only_metrics=True
-                )
-                metrics = {
-                    "queued": ingestion_metrics.metrics.queued or 0,
-                    "reconciled": ingestion_metrics.metrics.reconciled or 0,
-                    "failed": ingestion_metrics.metrics.failed or 0,
-                    "no_changes": ingestion_metrics.metrics.no_changes or 0,
-                    "total": ingestion_metrics.metrics.total or 0,
-                }
-                cache.set(
-                    self.INGESTION_METRICS_CACHE_KEY,
-                    metrics,
-                    timeout=300,
-                )
+            ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
+                only_metrics=True
+            )
+            
+            metrics = {
+                "queued": ingestion_metrics.metrics.queued or 0,
+                "reconciled": ingestion_metrics.metrics.reconciled or 0,
+                "failed": ingestion_metrics.metrics.failed or 0,
+                "no_changes": ingestion_metrics.metrics.no_changes or 0,
+                "total": ingestion_metrics.metrics.total or 0,
+            }
+            cache.set(
+                self.INGESTION_METRICS_CACHE_KEY,
+                metrics,
+                timeout=300,
+            )
 
             context = {
                 "ingestion_logs_table": table,
