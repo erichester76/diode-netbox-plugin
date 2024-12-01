@@ -75,11 +75,15 @@ class IngestionLogsView(View):
         logs = []
         next_token = None
         objmetrics = {}
+        seen={}
+        seen['request_id']={}
         request_ids = 0
+        seen['producer_app_name']={}
         producers = 0
+        seen['sdk_name']={}
         sdks = 0
         latest_activity = 0
-        seen = {}
+
         try:
             while True:
                 if next_token:
@@ -112,20 +116,21 @@ class IngestionLogsView(View):
 
                     objmetrics[state][object_type] += 1
                     
-                    if not seen['request_id']:
-                        seen[log['request_id']]=True
+                    if log['request_id'] not in seen['request_id']:
+                        seen['request_id'][log['request_id']]=True
                         request_ids += 1
                         
-                    if not seen['producer_app_name']:
-                        seen[log['producer_app_name']]=True
+                    if log['producer_app_name'] not in seen['producer_app_name']:
+                        seen['producer_app_name'][log['producer_app_name']]=True
                         producers += 1
                         
-                    if not seen['sdk_name']:
-                        seen[log['sdk_name']]=True
+                    if log['sdk_name'] not in seen['sdk_name']:
+                        seen['sdk_name'][log['sdk_name']]=True
                         sdks += 1   
                          
                     if int(log['ingested_ts'])>latest_activity:
                         latest_activity = int(log['ingested_ts'])
+                        
                     if log['state'] == 'Failed':
                         logs.extend(log)
                     
