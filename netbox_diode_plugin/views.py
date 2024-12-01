@@ -27,7 +27,7 @@ from netbox_diode_plugin.reconciler.sdk.client import ReconcilerClient
 from netbox_diode_plugin.reconciler.sdk.exceptions import ReconcilerClientError
 from netbox_diode_plugin.tables import IngestionLogsTable
 from google.protobuf.json_format import MessageToDict
-from netbox_diode_plugin.reconciler.sdk.v1.reconciler_pb2 import RetrieveIngestionLogsResponse
+from netbox_diode_plugin.reconciler.sdk.v1.reconciler_pb2 import State
 
 
 User = get_user_model()
@@ -105,6 +105,7 @@ class IngestionLogsView(View):
             objmetrics = {}
             for log in logs:
                 state = log.state
+                
                 object_type = log.object_type
 
                 if state not in objmetrics:
@@ -114,13 +115,6 @@ class IngestionLogsView(View):
 
                 objmetrics[state][object_type] += 1
                 
-            cached_ingestion_metrics = cache.get(self.INGESTION_METRICS_CACHE_KEY)
-            if (
-                cached_ingestion_metrics is not None
-                and cached_ingestion_metrics["total"] == resp.metrics.total
-            ):
-                metrics = cached_ingestion_metrics
-            else:
                 ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
                     only_metrics=True
                 )
