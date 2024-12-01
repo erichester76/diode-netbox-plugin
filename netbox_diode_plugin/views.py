@@ -144,10 +144,11 @@ class IngestionLogsView(View):
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
                 only_metrics=True
             )       
-              
+            
+            # create readable time stamp in correct TZ (stolen from tables.py)
             current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
             ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
-            latest_ts = f"{ts.date().isoformat()} {ts.time().isoformat(timespec=self.timespec)}"
+            latest_ts = f"{ts.date().isoformat()} {ts.time().isoformat()}"
 
             table = IngestionLogsTable(logs)
             RequestConfig(request, paginate={"per_page": 20}).configure(table)
@@ -164,11 +165,6 @@ class IngestionLogsView(View):
                 "latest_ts": latest_ts,
                 
             }
-            cache.set(
-                self.INGESTION_METRICS_CACHE_KEY,
-                metrics,
-                timeout=300,
-            )
 
             context = {
                 "ingestion_logs_table": table,
