@@ -107,8 +107,8 @@ class IngestionLogsView(View):
                     next_token = resp.next_page_token
                     
                 for log in serialized_logs:
+                    state = log['state'].lower()
                     log['state']=" ".join(log['state'].title().split("_"))
-                    state = log['state']
                     object_type = log['data_type']
 
                     if state not in objmetrics:
@@ -128,11 +128,11 @@ class IngestionLogsView(View):
                         
                     if not seen['sdk_name']:
                         seen[log['sdk_name']]=True
-                        sdks += 1
+                        sdks += 1   
+                         
+                    if log['state'] == 'Failed':
+                        logs.extend(log)
                     
-                filtered_logs = [log for log in serialized_logs if log['state'] == 'FAILED']
-                logs.extend(filtered_logs)
-                
                 if not next_token:
                     break
 
