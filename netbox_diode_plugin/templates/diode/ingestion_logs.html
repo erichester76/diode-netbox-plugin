@@ -174,7 +174,10 @@
             <div class="col col-md-12">
                 <div class="card">
                     <div class="table-responsive">
-                        {% render_table ingestion_logs_table %}
+                        {% render_table ingestion_logs_table 'diode/ingestion_logs_table.html' %}
+                        {% if ingestion_logs_table.data %}
+                            {% include 'diode/ingestion_logs_paginator.html' with next_page_token=next_page_token total_count=total_count %}
+                        {% endif %}                   
                     </div>
                 </div>
             </div>
