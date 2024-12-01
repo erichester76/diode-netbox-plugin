@@ -77,8 +77,8 @@ class IngestionLogsView(View):
                     cached_resp=resp
                     
                 #filter logs to just failed entries
-                filtered_logs = [log for log in cached_resp.logs if log.get("state") == "FAILED"]
-                logs.extend(filtered_logs)
+                #filtered_logs = [log for log in cached_resp.logs if log.get("state") == "FAILED"]
+                logs.extend(cached_resp.logs)
 
                 cache_key=cached_resp.next_page_token
                 
