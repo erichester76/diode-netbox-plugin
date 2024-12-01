@@ -36,6 +36,14 @@ User = get_user_model()
 class IngestionLogsView(View):
     """Ingestion logs view."""
 
+    state_mapping = {
+        State.UNSPECIFIED: 'unspecified',
+        State.QUEUED: 'queued',
+        State.RECONCILED: 'reconciled',
+        State.FAILED: 'failed',
+        State.NO_CHANGES: 'no_changes',
+    }
+
     INGESTION_METRICS_CACHE_KEY = "ingestion_metrics"
 
     def get(self, request):
@@ -95,7 +103,7 @@ class IngestionLogsView(View):
                     next_token = resp.next_page_token
                     
                 # for log in serialized_logs:
-                #     state = str(State(log['state'])).lower()
+                #     state = self.statemapping.get(log['state'], 'unspecified')
                 #     object_type = log.object_type
 
                 #     if state not in objmetrics:
@@ -105,7 +113,7 @@ class IngestionLogsView(View):
 
                 #     objmetrics[state][object_type] += 1
                     
-                #filtered_logs = [log for log in serialized_logs if State(log['state']) == State.FAILED]
+                # filtered_logs = [log for log in serialized_logs if log['state'] == State.FAILED]
                 logs.extend(serialized_logs)
                 
                 if not next_token:
