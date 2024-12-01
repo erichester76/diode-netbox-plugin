@@ -83,23 +83,37 @@ class IngestionLogsView(View):
                 cached_next_token = cache.get(f"{cache_key}_next_token")
 
                 if cached_logs:
-                    logs.extend(cached_logs)
+                    serialized_logs = cached_logs
                     next_token = cached_next_token
+
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
                     serialized_logs = [MessageToDict(log) for log in resp.logs]
-                    filtered_logs = [log for log in serialized_logs if log.get("state") == "FAILED"]
-                    logs.extend(filtered_logs)
-                    cache.set(cache_key, filtered_logs, timeout=300) 
+                    cache.set(cache_key, serialized_logs, timeout=300) 
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
-
+                    
+                filtered_logs = [log for log in serialized_logs if log.get("state") == 3]
+                logs.extend(filtered_logs)
+                
                 if not next_token:
                     break
 
             table = IngestionLogsTable(logs)
             RequestConfig(request, paginate={"per_page": 20}).configure(table)
+  
+            objmetrics = {}
+            for log in logs:
+                state = log.state
+                object_type = log.object_type
 
+                if state not in objmetrics:
+                    metrics[state] = {}
+                if object_type not in objmetrics[state]:
+                    metrics[state][object_type] = 0
+
+                objmetrics[state][object_type] += 1
+                
             cached_ingestion_metrics = cache.get(self.INGESTION_METRICS_CACHE_KEY)
             if (
                 cached_ingestion_metrics is not None
@@ -127,6 +141,7 @@ class IngestionLogsView(View):
                 "ingestion_logs_table": table,
                 "total_count": resp.metrics.total,
                 "ingestion_metrics": metrics,
+                "object_metrics": objmetrics,
             }
 
         except ReconcilerClientError as error:
