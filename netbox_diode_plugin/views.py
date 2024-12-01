@@ -103,7 +103,7 @@ class IngestionLogsView(View):
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
                     
-                for log in cached_logs:
+                for log in serialized_logs:
                     state = self.state_mapping.get(log['state']).lower()
                     object_type = log['data_type']
 
@@ -114,7 +114,7 @@ class IngestionLogsView(View):
 
                     objmetrics[state][object_type] += 1
                     
-                filtered_logs = [log for log in cached_logs if log.state == State.FAILED]
+                filtered_logs = [log for log in serialized_logs if log['state'] == State.FAILED]
                 logs.extend(filtered_logs)
                 
                 if not next_token:
