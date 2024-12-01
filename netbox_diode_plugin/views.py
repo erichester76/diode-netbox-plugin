@@ -61,19 +61,19 @@ class IngestionLogsView(View):
             api_key=token.key,
         )
 
-        page_size = 50
-
+        logs = {}
+        page_token = None
         try:
-            ingestion_logs_filters = {
-                "page_size": page_size,
-            }
-            request_page_token = request.GET.get("page_token")
-            if request_page_token is not None:
-                ingestion_logs_filters["page_token"] = request_page_token
+            
+            resp = reconciler_client.retrieve_ingestion_logs()
+            print(f"{resp.logs}")
+            while resp.next_token:
+                page_token = resp.next_token
+                resp = reconciler_client.retrieve_ingestion_logs(page_token)
+                logs.extend(resp.logs)           
+            table = IngestionLogsTable(logs)
 
-            resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-            table = IngestionLogsTable(resp.logs)
-
+            #handlemetrics
             cached_ingestion_metrics = cache.get(self.INGESTION_METRICS_CACHE_KEY)
             if (
                 cached_ingestion_metrics is not None
@@ -98,9 +98,7 @@ class IngestionLogsView(View):
                 )
 
             context = {
-                "next_page_token": resp.next_page_token,
                 "ingestion_logs_table": table,
-                "total_count": resp.metrics.total,
                 "ingestion_metrics": metrics,
             }
 
