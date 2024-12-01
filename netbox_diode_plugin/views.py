@@ -134,8 +134,8 @@ class IngestionLogsView(View):
                         latest_activity = int(log['ingestion_ts'])
                         
                     #Only add failed entries to make log more managable to work with pagination
-                    if log['state'] == 'Failed':
-                        logs.extend(log)
+                    if 'Failed' in log['state']:
+                        logs.append(log)
                     
                 if not next_token:
                     break
