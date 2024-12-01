@@ -43,7 +43,7 @@ class TimestampColumn(columns.DateTimeColumn):
         """Renders an epoch timestamp as a human-readable date."""
         if value:
             current_tz = zoneinfo.ZoneInfo(settings.TIME_ZONE)
-            value = datetime.datetime.fromtimestamp(value / 1_000_000_000).astimezone(
+            value = datetime.datetime.fromtimestamp(int(value) / 1_000_000_000).astimezone(
                 current_tz
             )
             return f"{value.date().isoformat()} {value.time().isoformat(timespec=self.timespec)}"
