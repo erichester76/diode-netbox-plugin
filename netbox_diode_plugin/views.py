@@ -97,24 +97,24 @@ class IngestionLogsView(View):
 
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-                    serialized_logs = [MessageToDict(log) for log in resp.logs]
+                    serialized_logs = [MessageToDict(log, use_integers_for_enums=True) for log in resp.logs]
                     cache.set(cache_key, serialized_logs, timeout=300) 
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
                     
-                # for log in serialized_logs:
-                #     state = self.statemapping.get(log['state'], 'unspecified')
-                #     object_type = log.object_type
+                for log in serialized_logs:
+                    state = log['state'].Name.lower()
+                    object_type = log.object_type
 
-                #     if state not in objmetrics:
-                #         objmetrics[state] = {}
-                #     if object_type not in objmetrics[state]:
-                #         objmetrics[state][object_type] = 0
+                    if state not in objmetrics:
+                        objmetrics[state] = {}
+                    if object_type not in objmetrics[state]:
+                        objmetrics[state][object_type] = 0
 
-                #     objmetrics[state][object_type] += 1
+                    objmetrics[state][object_type] += 1
                     
-                # filtered_logs = [log for log in serialized_logs if log['state'] == State.FAILED]
-                logs.extend(serialized_logs)
+                filtered_logs = [log for log in serialized_logs if log['state'] == State.FAILED]
+                logs.extend(filtered_logs)
                 
                 if not next_token:
                     break
