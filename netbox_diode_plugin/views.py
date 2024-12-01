@@ -82,7 +82,10 @@ class IngestionLogsView(View):
         logs = []
         next_token = None
         objmetrics = {}
-
+        request_ids = 0
+        producers = 0
+        sdks = 0
+        seen = {}
         try:
             while True:
                 if next_token:
@@ -98,7 +101,7 @@ class IngestionLogsView(View):
 
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-                    serialized_logs=[MessageToDict(log) for log in resp.logs]
+                    serialized_logs=[MessageToDict(log, use_integers_for_enums=True) for log in resp.logs]
                     cache.set(cache_key, serialized_logs, timeout=300) 
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
@@ -114,6 +117,18 @@ class IngestionLogsView(View):
                         objmetrics[state][object_type] = 0
 
                     objmetrics[state][object_type] += 1
+                    
+                    if not seen['request_id']:
+                        seen[log['request_id']]=True
+                        request_ids += 1
+                        
+                    if not seen['producer_app_name']:
+                        seen[log['producer_app_name']]=True
+                        producers += 1
+                        
+                    if not seen['sdk_name']:
+                        seen[log['sdk_name']]=True
+                        sdks += 1
                     
                 filtered_logs = [log for log in serialized_logs if int(log['state']) == 3]
                 logs.extend(filtered_logs)
@@ -145,6 +160,10 @@ class IngestionLogsView(View):
                 "ingestion_logs_table": table,
                 "ingestion_metrics": metrics,
                 "object_metrics": objmetrics,
+                "request_ids": request_ids,
+                "producers": producers,
+                "sdks": sdks,
+                "diode_target": diode_target,
             }
 
         except ReconcilerClientError as error:
