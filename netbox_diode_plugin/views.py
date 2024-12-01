@@ -144,9 +144,7 @@ class IngestionLogsView(View):
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
                 only_metrics=True
             )
-            
-            latest_ts
-            
+                        
             current_tz = zoneinfo.ZoneInfo(settings.TIME_ZONE)
             ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(
                 current_tz
