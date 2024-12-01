@@ -28,10 +28,10 @@ from netbox_diode_plugin.reconciler.sdk.exceptions import ReconcilerClientError
 from netbox_diode_plugin.tables import IngestionLogsTable
 from google.protobuf.json_format import MessageToDict
 from netbox_diode_plugin.reconciler.sdk.v1.reconciler_pb2 import State
-
+import logging
 
 User = get_user_model()
-
+logger=logging.getLogger()
 
 class IngestionLogsView(View):
     """Ingestion logs view."""
@@ -103,9 +103,9 @@ class IngestionLogsView(View):
                     next_token = resp.next_page_token
                     
                 for log in serialized_logs:
-                    print(f"{log}")
+                    logger.info(f"{log}")
                     state = self.state_mapping.get(log['state']).lower()
-                    print(f"{state}")
+                    logger.info(f"{state}")
                     object_type = log['object_type']
 
                     if state not in objmetrics:
