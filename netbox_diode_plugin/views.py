@@ -93,8 +93,8 @@ class IngestionLogsView(View):
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
                     
-                filtered_logs = [log for log in serialized_logs if log.get("state") == State.FAILED]
-                logs.extend(filtered_logs)
+                #filtered_logs = [log for log in serialized_logs if log.get("state") == State.FAILED]
+                logs.extend(serialized_logs)
                 
                 if not next_token:
                     break
