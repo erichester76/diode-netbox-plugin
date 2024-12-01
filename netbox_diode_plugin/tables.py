@@ -81,7 +81,7 @@ class IngestionLogsTable(BaseTable):
         orderable=False,
     )
 
-    object_type = DataTypeColumn(
+    object_type = tables.column(
         verbose_name="Data Type",
         accessor="data_type",
         orderable=False,

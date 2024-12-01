@@ -37,11 +37,11 @@ class IngestionLogsView(View):
     """Ingestion logs view."""
 
     state_mapping = {
-        State.UNSPECIFIED: 'unspecified',
-        State.QUEUED: 'queued',
-        State.RECONCILED: 'reconciled',
-        State.FAILED: 'failed',
-        State.NO_CHANGES: 'no_changes',
+        0: 'unspecified',
+        1: 'queued',
+        2: 'reconciled',
+        3: 'failed',
+        4: 'no_changes',
     }
 
     INGESTION_METRICS_CACHE_KEY = "ingestion_metrics"
@@ -104,7 +104,8 @@ class IngestionLogsView(View):
                     next_token = resp.next_page_token
                     
                 for log in serialized_logs:
-                    state = self.state_mapping.get(log['state']).lower()
+                    state = self.state_mapping.get(int(log['state']))
+                    log['state']=state
                     object_type = log['data_type']
 
                     if state not in objmetrics:
