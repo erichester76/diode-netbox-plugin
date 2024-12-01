@@ -86,6 +86,8 @@ class IngestionLogsView(View):
 
         try:
             while True:
+                
+                #Get and cache logs and on subsequent calls just get non cached pages
                 if next_token:
                     ingestion_logs_filters["page_token"] = next_token
                     
@@ -99,16 +101,18 @@ class IngestionLogsView(View):
 
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
+                    next_token = resp.next_page_token
+                    #have to serialize logs to cache them
                     serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
                     cache.set(cache_key, serialized_logs, timeout=300) 
-                    cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
-                    next_token = resp.next_page_token
+                    cache.set(f"{cache_key}_next_token", next_token, timeout=300)
                     
+                #create per object and state stats and only send log entries for FAILED to table for render
                 for log in serialized_logs:
                     state = log['state'].lower()
                     log['state']=" ".join(log['state'].title().split("_"))
                     object_type = log['data_type']
-
+                    
                     if state not in objmetrics:
                         objmetrics[state] = {}
                     if object_type not in objmetrics[state]:
@@ -119,11 +123,9 @@ class IngestionLogsView(View):
                     if log['request_id'] not in seen['request_id']:
                         seen['request_id'][log['request_id']]=True
                         request_ids += 1
-                        
                     if log['producer_app_name'] not in seen['producer_app_name']:
                         seen['producer_app_name'][log['producer_app_name']]=True
                         producers += 1
-                        
                     if log['sdk_name'] not in seen['sdk_name']:
                         seen['sdk_name'][log['sdk_name']]=True
                         sdks += 1   
@@ -138,19 +140,17 @@ class IngestionLogsView(View):
                 if not next_token:
                     break
 
-            table = IngestionLogsTable(logs)
-            RequestConfig(request, paginate={"per_page": 20}).configure(table)
-  
+
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
                 only_metrics=True
-            )
-                        
-            current_tz = zoneinfo.ZoneInfo(settings.TIME_ZONE)
-            ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(
-                current_tz
-            )
+            )       
+              
+            current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
+            ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
             latest_ts = f"{ts.date().isoformat()} {ts.time().isoformat(timespec=self.timespec)}"
 
+            table = IngestionLogsTable(logs)
+            RequestConfig(request, paginate={"per_page": 20}).configure(table)
             
             metrics = {
                 "queued": ingestion_metrics.metrics.queued or 0,
