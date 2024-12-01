@@ -84,13 +84,13 @@ class IngestionLogsTable(BaseTable):
 
     producer = tables.Column(
         verbose_name="Producer",
-        empty_values=(),
+        accessor="producer_app_name",
         orderable=False,
     )
 
     sdk = tables.Column(
         verbose_name="SDK",
-        empty_values=(),
+        accessor="sdk_name",
         orderable=False,
     )
 
@@ -119,10 +119,10 @@ class IngestionLogsTable(BaseTable):
         empty_text = "No ingestion logs to display"
         footer = False
 
-    def render_producer(self, record):
-        """Renders the producer."""
-        return f"{record.producer_app_name}/{record.producer_app_version}"
+    # def render_producer(self, record):
+    #     """Renders the producer."""
+    #     return f"{record.producer_app_name}/{record.producer_app_version}"
 
-    def render_sdk(self, record):
-        """Renders the SDK."""
-        return f"{record.sdk_name}/{record.sdk_version}"
+    # def render_sdk(self, record):
+    #     """Renders the SDK."""
+    #     return f"{record.sdk_name}/{record.sdk_version}"
