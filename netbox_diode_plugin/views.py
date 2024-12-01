@@ -132,7 +132,6 @@ class IngestionLogsView(View):
 
             context = {
                 "ingestion_logs_table": table,
-                "total_count": resp.metrics.total,
                 "ingestion_metrics": metrics,
                 "object_metrics": objmetrics,
             }
