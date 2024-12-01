@@ -119,7 +119,7 @@ class IngestionLogsView(View):
                         objmetrics[state][object_type] = 0
 
                     objmetrics[state][object_type] += 1
-                    objmetrics[state]['total'] +=1
+                    objmetrics[state]['total'] += 1
                     
                     if log['request_id'] not in seen['request_id']:
                         seen['request_id'][log['request_id']]=True
