@@ -73,6 +73,7 @@ class IngestionLogsView(View):
 
         logs = []
         next_token = None
+        objmetrics = {}
 
         try:
             while True:
@@ -93,8 +94,19 @@ class IngestionLogsView(View):
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
                     
-                #filtered_logs = [log for log in serialized_logs if log['state'] == State.FAILED]
-                logs.extend(serialized_logs)
+                for log in serialized_logs:
+                    state = State[log['state']].Name.lower()
+                    object_type = log.object_type
+
+                    if state not in objmetrics:
+                        objmetrics[state] = {}
+                    if object_type not in objmetrics[state]:
+                        objmetrics[state][object_type] = 0
+
+                    objmetrics[state][object_type] += 1
+                    
+                filtered_logs = [log for log in serialized_logs if State(log['state']) == State.FAILED]
+                logs.extend(filtered_logs)
                 
                 if not next_token:
                     break
@@ -102,18 +114,7 @@ class IngestionLogsView(View):
             table = IngestionLogsTable(logs)
             RequestConfig(request, paginate={"per_page": 20}).configure(table)
   
-            objmetrics = {}
-            for log in logs:
-                state = State[log['state']].Name.lower()
-                object_type = log.object_type
-
-                if state not in objmetrics:
-                    objmetrics[state] = {}
-                if object_type not in objmetrics[state]:
-                    objmetrics[state][object_type] = 0
-
-                objmetrics[state][object_type] += 1
-                
+           
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
                 only_metrics=True
             )
