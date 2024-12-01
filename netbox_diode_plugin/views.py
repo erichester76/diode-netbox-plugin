@@ -67,15 +67,19 @@ class IngestionLogsView(View):
                 "page_size": 100,
             }
 
+            #build a cache of log entry pages to avoid recollection on page refresh or pagination
             cache_key='first'
             while cache_key:
                 cached_resp = cache.get(cache_key)
-                if cached_resp:
-                    logs.extend(cached_resp.logs)
-                else:     
+                if not cached_resp:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
                     cache.set(cache_key,resp,3600)
                     cached_resp=resp
+                    
+                #filter logs to just failed entries
+                filtered_logs = [log for log in cached_resp.logs if log.get("state") == "FAILED"]
+                logs.extend(filtered_logs)
+
                 cache_key=cached_resp.next_page_token
                 
             table = IngestionLogsTable(logs)
