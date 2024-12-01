@@ -128,9 +128,10 @@ class IngestionLogsView(View):
                         seen['sdk_name'][log['sdk_name']]=True
                         sdks += 1   
                          
-                    if int(log['ingested_ts'])>latest_activity:
-                        latest_activity = int(log['ingested_ts'])
+                    if int(log['ingestion_ts'])>latest_activity:
+                        latest_activity = int(log['ingestion_ts'])
                         
+                    #Only add failed entries to make log more managable to work with pagination
                     if log['state'] == 'Failed':
                         logs.extend(log)
                     
