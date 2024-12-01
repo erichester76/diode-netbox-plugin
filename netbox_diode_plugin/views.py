@@ -97,7 +97,7 @@ class IngestionLogsView(View):
 
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-                    serialized_logs = [MessageToDict(log, use_integers_for_enums=True, preserving_proto_field_name=True) for log in resp.logs]
+                    serialized_logs = [MessageToDict(log, use_integers_for_enums=True, preserving_proto_field_name=True, including_default_value_fields=True) for log in resp.logs]
                     cache.set(cache_key, serialized_logs, timeout=300) 
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
