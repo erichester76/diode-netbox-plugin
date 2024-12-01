@@ -105,7 +105,7 @@ class IngestionLogsView(View):
                     
                 for log in serialized_logs:
                     state = self.state_mapping.get(int(log['state']))
-                    log['state']=state
+                    log['state']=" ".join(state.title().split("_"))
                     object_type = log['data_type']
 
                     if state not in objmetrics:
