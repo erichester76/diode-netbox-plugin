@@ -86,31 +86,24 @@ class IngestionLogsView(View):
 
                 if cached_logs_json:
                     # Deserialize cached logs
-                    cached_logs = json.loads(cached_logs_json)
-
-                    # Filter cached logs for state='FAILED'
-                    filtered_logs = [log for log in cached_logs if log.get("state") == "FAILED"]
-                    logs.extend(filtered_logs)
-
-                    # Retrieve the cached next_token
-                    next_token = cached_next_token
+                    logs = json.loads(cached_logs_json)
                 else:
                     # Retrieve logs from the client if not cached
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
 
                     # Convert Protobuf logs to dictionaries
-                    serialized_logs = [MessageToDict(log) for log in resp.logs]
+                    logs = [MessageToDict(log) for log in resp.logs]
 
-                    # Filter the retrieved logs for state='FAILED'
-                    filtered_logs = [log for log in serialized_logs if log.get("state") == "FAILED"]
-                    logs.extend(filtered_logs)
+                # Filter the retrieved logs for state='FAILED'
+                filtered_logs = [log for log in logs if log.get("state") == "FAILED"]
+                logs.extend(filtered_logs)
 
-                    # Cache the response logs and next_token
-                    cache.set(cache_key, json.dumps(serialized_logs), timeout=300)  # Cache logs as JSON for 5 minutes
-                    cache.set(f"{cache_key}_next_token", resp.next_token, timeout=300)
+                # Cache the response logs and next_token
+                cache.set(cache_key, json.dumps(logs), timeout=300)  # Cache logs as JSON for 5 minutes
+                cache.set(f"{cache_key}_next_token", resp.next_token, timeout=300)
 
-                    # Update the next_token
-                    next_token = resp.next_token
+                # Update the next_token
+                next_token = cached_next_token if cached_next_token else resp.next_token
 
             # Pass the filtered logs to the table
             table = IngestionLogsTable(logs)
