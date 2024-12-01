@@ -112,6 +112,8 @@ class IngestionLogsView(View):
                     state = log['state'].lower()
                     log['state']=" ".join(log['state'].title().split("_"))
                     object_type = log['data_type']
+                    _, object_type = " ".join(log['data_type'].title().split("_"))
+                    
                     
                     if state not in objmetrics:
                         objmetrics[state] = {}
