@@ -2,6 +2,7 @@
 # Copyright 2024 NetBox Labs Inc
 """Diode NetBox Plugin - Views."""
 import os
+import json
 
 from django.conf import settings as netbox_settings
 from django.contrib import messages
@@ -25,6 +26,8 @@ from netbox_diode_plugin.plugin_config import (
 from netbox_diode_plugin.reconciler.sdk.client import ReconcilerClient
 from netbox_diode_plugin.reconciler.sdk.exceptions import ReconcilerClientError
 from netbox_diode_plugin.tables import IngestionLogsTable
+from google.protobuf.json_format import MessageToDict
+
 
 User = get_user_model()
 
@@ -61,28 +64,55 @@ class IngestionLogsView(View):
             target=diode_target,
             api_key=token.key,
         )
+        page_size = 50
+        ingestion_logs_filters = {"page_size": page_size}
+        request_page_token = request.GET.get("page_token")
+        if request_page_token:
+            ingestion_logs_filters["page_token"] = request_page_token
+
         logs = []
-        
+        next_token = None
+
         try:
-            ingestion_logs_filters = {
-                "page_size": 100,
-            }
+            while next_token:
+                # Use next_token from the last response to continue pagination
+                if next_token:
+                    ingestion_logs_filters["page_token"] = next_token
 
-            #build a cache of log entry pages to avoid recollection on page refresh or pagination
-            cache_key='first'
-            while cache_key:
-                cached_resp = cache.get(cache_key)
-                if not cached_resp:
+                # Generate cache key based on the current token
+                cache_key = f"ingestion_logs_{next_token or 'start'}"
+                cached_logs_json = cache.get(cache_key)
+                cached_next_token = cache.get(f"{cache_key}_next_token")
+
+                if cached_logs_json:
+                    # Deserialize cached logs
+                    cached_logs = json.loads(cached_logs_json)
+
+                    # Filter cached logs for state='FAILED'
+                    filtered_logs = [log for log in cached_logs if log.get("state") == "FAILED"]
+                    logs.extend(filtered_logs)
+
+                    # Retrieve the cached next_token
+                    next_token = cached_next_token
+                else:
+                    # Retrieve logs from the client if not cached
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-                    cache.set(cache_key,resp,3600)
-                    cached_resp=resp
-                    
-                #filter logs to just failed entries
-                #filtered_logs = [log for log in cached_resp.logs if log.get("state") == "FAILED"]
-                logs.extend(cached_resp.logs)
 
-                cache_key=cached_resp.next_page_token
-                
+                    # Convert Protobuf logs to dictionaries
+                    serialized_logs = [MessageToDict(log) for log in resp.logs]
+
+                    # Filter the retrieved logs for state='FAILED'
+                    filtered_logs = [log for log in serialized_logs if log.get("state") == "FAILED"]
+                    logs.extend(filtered_logs)
+
+                    # Cache the response logs and next_token
+                    cache.set(cache_key, json.dumps(serialized_logs), timeout=300)  # Cache logs as JSON for 5 minutes
+                    cache.set(f"{cache_key}_next_token", resp.next_token, timeout=300)
+
+                    # Update the next_token
+                    next_token = resp.next_token
+
+            # Pass the filtered logs to the table
             table = IngestionLogsTable(logs)
             RequestConfig(request, paginate={"per_page": 20}).configure(table)
 
