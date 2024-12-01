@@ -13,6 +13,7 @@ from netbox.plugins import get_plugin_config
 from netbox.views import generic
 from users.models import Group, ObjectPermission, Token
 from utilities.views import register_model_view
+from django_tables2 import RequestConfig
 
 from netbox_diode_plugin.forms import SettingsForm, SetupForm
 from netbox_diode_plugin.models import Setting
@@ -83,6 +84,7 @@ class IngestionLogsView(View):
                 cache_key=cached_resp.next_page_token
                 
             table = IngestionLogsTable(logs)
+            RequestConfig(request, paginate={"per_page": 20}).configure(table)
 
             cached_ingestion_metrics = cache.get(self.INGESTION_METRICS_CACHE_KEY)
             if (
