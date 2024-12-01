@@ -79,7 +79,7 @@
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
                             {% trans "Total" %}<span class="badge">{{ ingestion_metrics.failed }}</span>
                         </a>     
-                        {% with object_metrics.failed as ometrics %}
+                        {% with object_metrics[3] as ometrics %}
                             {% for object_type, count in ometrics.items %}
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
                                 {{ object_type }}<span class="badge">{{ count }}</span>
