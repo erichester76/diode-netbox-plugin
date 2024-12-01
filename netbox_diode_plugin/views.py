@@ -87,9 +87,10 @@ class IngestionLogsView(View):
                     next_token = cached_next_token
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-                    filtered_logs = [log for log in resp.logs if log.get("state") == "FAILED"]
-                    logs.extend(filtered_logs)
-                    cache.set(cache_key, filtered_logs, timeout=300) 
+                    #filtered_logs = [log for log in resp.logs if log.get("state") == "FAILED"]
+                    logs.extend(resp.logs)
+                    
+                    cache.set(cache_key, resp.logs, timeout=300) 
                     cache.set(f"{cache_key}_next_token", resp.next_token, timeout=300)
                     next_token = resp.next_token
 
