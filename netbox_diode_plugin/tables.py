@@ -25,17 +25,6 @@ INGESTION_LOGS_TABLE_ACTIONS_TEMPLATE = """
 """
 
 
-class IngestionStateColumn(tables.Column):
-    """Renders the ingestion state as a human-readable string."""
-
-    def render(self, value):
-        """Renders the ingestion state as a human-readable string."""
-        if value:
-            state_name = reconciler_pb2.State.Name(value)
-            return " ".join(state_name.title().split("_"))
-        return None
-
-
 class TimestampColumn(columns.DateTimeColumn):
     """Custom implementation of Timestamp to render an epoch timestamp as a human-readable date."""
 
@@ -75,13 +64,13 @@ class IngestionLogsTable(BaseTable):
         orderable=False,
     )
 
-    state = IngestionStateColumn(
+    state = tables.Column(
         verbose_name="State",
         accessor="state",
         orderable=False,
     )
 
-    object_type = tables.Column(
+    object_type = DataTypeColumn(
         verbose_name="Data Type",
         accessor="data_type",
         orderable=False,
