@@ -2,7 +2,8 @@
 # Copyright 2024 NetBox Labs Inc
 """Diode NetBox Plugin - Views."""
 import os
-import json
+import datetime
+import zoneinfo
 
 from django.conf import settings as netbox_settings
 from django.contrib import messages
@@ -35,14 +36,6 @@ logger=logging.getLogger()
 
 class IngestionLogsView(View):
     """Ingestion logs view."""
-
-    state_mapping = {
-        0: 'unspecified',
-        1: 'queued',
-        2: 'reconciled',
-        3: 'failed',
-        4: 'no_changes',
-    }
 
     INGESTION_METRICS_CACHE_KEY = "ingestion_metrics"
 
@@ -85,6 +78,7 @@ class IngestionLogsView(View):
         request_ids = 0
         producers = 0
         sdks = 0
+        latest_activity = 0
         seen = {}
         try:
             while True:
@@ -101,7 +95,7 @@ class IngestionLogsView(View):
 
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
-                    serialized_logs=[MessageToDict(log) for log in resp.logs]
+                    serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
                     cache.set(cache_key, serialized_logs, timeout=300) 
                     cache.set(f"{cache_key}_next_token", resp.next_page_token, timeout=300)
                     next_token = resp.next_page_token
@@ -130,6 +124,8 @@ class IngestionLogsView(View):
                         seen[log['sdk_name']]=True
                         sdks += 1   
                          
+                    if int(log['ingested_ts'])>latest_activity:
+                        latest_activity = int(log['ingested_ts'])
                     if log['state'] == 'Failed':
                         logs.extend(log)
                     
@@ -143,12 +139,26 @@ class IngestionLogsView(View):
                 only_metrics=True
             )
             
+            latest_ts
+            
+            current_tz = zoneinfo.ZoneInfo(settings.TIME_ZONE)
+            ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(
+                current_tz
+            )
+            latest_ts = f"{ts.date().isoformat()} {ts.time().isoformat(timespec=self.timespec)}"
+
+            
             metrics = {
                 "queued": ingestion_metrics.metrics.queued or 0,
                 "reconciled": ingestion_metrics.metrics.reconciled or 0,
                 "failed": ingestion_metrics.metrics.failed or 0,
                 "no_changes": ingestion_metrics.metrics.no_changes or 0,
                 "total": ingestion_metrics.metrics.total or 0,
+                "request_ids": request_ids,
+                "producers": producers,
+                "sdks": sdks,
+                "latest_ts": latest_ts,
+                
             }
             cache.set(
                 self.INGESTION_METRICS_CACHE_KEY,
@@ -160,9 +170,6 @@ class IngestionLogsView(View):
                 "ingestion_logs_table": table,
                 "ingestion_metrics": metrics,
                 "object_metrics": objmetrics,
-                "request_ids": request_ids,
-                "producers": producers,
-                "sdks": sdks,
                 "diode_target": diode_target,
             }
 

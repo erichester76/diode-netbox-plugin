@@ -50,19 +50,19 @@
                     </tr>
                     <tr>
                         <th scope="row">{% trans "Unique Requests" %}</th>
-                        <td>{{ request_ids }}</td>
+                        <td>{{ ingestion_metrics.request_ids }}</td>
                     </tr>         
                     <tr>
                         <th scope="row">{% trans "Unique Producers" %}</th>
-                        <td>{{ producers }}</td>
+                        <td>{{ ingestion_metrics.producers }}</td>
                     </tr>
                     <tr>
                         <th scope="row">{% trans "Unique SDKs" %}</th>
-                        <td>{{ sdks }}</td>
+                        <td>{{ ingestion_metrics.sdks }}</td>
                     </tr>                        
                     <tr>
                         <th scope="row">{% trans "Last Activity" %}</th>
-                        <td>{{ last_activity }}</td>
+                        <td>{{ ingestion_metrics.lastest_ts }}</td>
                     </tr>                
         
                 </table>
