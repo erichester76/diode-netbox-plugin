@@ -115,7 +115,7 @@ class IngestionLogsView(View):
 
                     objmetrics[state][object_type] += 1
                     
-                filtered_logs = [log for log in serialized_logs if log['state'] == State.FAILED]
+                filtered_logs = [log for log in serialized_logs if int(log['state']) == 3]
                 logs.extend(filtered_logs)
                 
                 if not next_token:
