@@ -184,7 +184,7 @@
             <div class="card">
                 <div class="table-responsive">
                     {% render_table ingestion_logs_table 'diode/ingestion_logs_table.html' %}
-                    {% if is_paginated %}
+                    {% if total_count > 20 %}
                     {% include "inc/pagination.html" with page_obj=ingestion_logs_table.page total_count=total_count %}
                     {% endif %}
                 </div>
