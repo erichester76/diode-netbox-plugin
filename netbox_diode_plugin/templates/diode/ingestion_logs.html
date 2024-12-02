@@ -17,168 +17,167 @@
  
 <div class="col col-12">
 
-        <div class="row">
-            <div class="col col-md-6">
-                <div class="card">
-                <h5 class="card-header">{% trans "Diode Status" %}</h5>
-                <table class="table table-hover attr-table">
-                    <tr>
-                        <th scope="row">{% trans "Server" %}</th>
-                        <td>{{ diode_target }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">{% trans "Status" %}</th>
-                        <td class="d-flex justify-content-between">
-                        {% if ingestion_logs_error %}
-                            {% trans "Offline" as status %}
-                            {% badge status "red" %}
-                        {% elif ingestion_metrics.queued > 0 %}
-                            {% trans "Ingesting" as status %}
-                            {% badge status "blue" %}  
-                        {% else %}
-                            {% trans "Online" as status %}
-                            {% badge status "green" %}                    
-                        {% endif %}
-                        {% if ingestion_logs_error %}
-                            </td></tr><tr><td>
-                            <span class="text-red">
-                            <i class="mdi mdi-alert"></i>
-                            <p>{{ ingestion_logs_error.status_code }}: {{ ingestion_logs_error.details }}</p>
-                            </span>
-                        {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">{% trans "Unique Requests" %}</th>
-                        <td>{{ ingestion_metrics.request_ids }}</td>
-                    </tr>         
-                    <tr>
-                        <th scope="row">{% trans "Unique Producers" %}</th>
-                        <td>{{ ingestion_metrics.producers }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">{% trans "Unique SDKs" %}</th>
-                        <td>{{ ingestion_metrics.sdks }}</td>
-                    </tr>                        
-                    <tr>
-                        <th scope="row">{% trans "Last Activity" %}</th>
-                        <td>{{ ingestion_metrics.latest_ts }}</td>
-                    </tr>                
-        
-                </table>
-                </div>
-                <div class="row">
-                  <div class="col col-6">
-                    <div class="card border-blue">
-                    <h5 class="card-header text-blue">{% trans "Ingested Entities" %}</h5>
-                    <ul class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                        {% trans "Total" %}<span class="badge">{{ ingestion_metrics.total }}</span>
-                        </a>
-                        {% with object_metrics.total as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                        {% endwith %}
-                    </ul>
-                   </div>
-                </div>
-            </div>
-
-            {% if not ingestion_logs_error %}
-            <div class="col col-6">
-                    <div class="card border-red">
-                    <h5 class="card-header text-red">{% trans "Failed Entities" %}</h5>
-                    <ul class="list-group list-group-flush"> 
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.failed }}</span>
-                        </a>     
-                        {% with object_metrics.failed as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                        {% endwith %}
-                    </ul>
-                    </div>
-
-                    <div class="card border-yellow">
-                    <h5 class="card-header text-yellow">{% trans "Reconciled Entities" %}</h5>
-                    <ul class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.reconciled }}</span>
-                        </a> 
-                        {% with object_metrics.reconciled as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                        {% endwith %}        
-                    </ul>
-                   </div>
-
-                    <div class="card border-green">
-                    <h5 class="card-header text-green">{% trans "Unchanged Entities" %}</h5>
-                    <ul class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.no_changes }}</span>
-                        </a>
-                        {% with object_metrics.no_changes as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                        {% endwith %}
-                  </ul>
-                  </div>
-
-            </div>
-        </div>
-
-        <div class="row">
-
-            
-            <div class="col col-6"></div>
-
-            <div class="col col-6">
-                <div class="card border-blue">
-                    <h5 class="card-header text-blue">{% trans "Queued Entities" %}</h5>
-                    <ul class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.queued }}</span>
-                        </a>
-                        {% with object_metrics.queued as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                        {% endwith %}     
-                    </ul>
-                    </div>
-                </div>
-
-        </div>
-        <div class="row">
-
-            <div class="col col-md-12">
-                <div class="card">
-                    <div class="table-responsive">
-                        {% render_table ingestion_logs_table %}
-                    </div>
-                    {% if is_paginated %}
-                    {% include "inc/pagination.html" with page_obj=ingestion_logs_table.page total_count=total_count %}
+    <div class="row">
+        <div class="col col-md-6">
+            <div class="card">
+            <h5 class="card-header">{% trans "Diode Status" %}</h5>
+            <table class="table table-hover attr-table">
+                <tr>
+                    <th scope="row">{% trans "Server" %}</th>
+                    <td>{{ diode_target }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">{% trans "Status" %}</th>
+                    <td class="d-flex justify-content-between">
+                    {% if ingestion_logs_error %}
+                        {% trans "Offline" as status %}
+                        {% badge status "red" %}
+                    {% elif ingestion_metrics.queued > 0 %}
+                        {% trans "Ingesting" as status %}
+                        {% badge status "blue" %}  
+                    {% else %}
+                        {% trans "Online" as status %}
+                        {% badge status "green" %}                    
                     {% endif %}
+                    {% if ingestion_logs_error %}
+                        </td></tr><tr><td>
+                        <span class="text-red">
+                        <i class="mdi mdi-alert"></i>
+                        <p>{{ ingestion_logs_error.status_code }}: {{ ingestion_logs_error.details }}</p>
+                        </span>
+                    {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">{% trans "Unique Requests" %}</th>
+                    <td>{{ ingestion_metrics.request_ids }}</td>
+                </tr>         
+                <tr>
+                    <th scope="row">{% trans "Unique Producers" %}</th>
+                    <td>{{ ingestion_metrics.producers }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">{% trans "Unique SDKs" %}</th>
+                    <td>{{ ingestion_metrics.sdks }}</td>
+                </tr>                        
+                <tr>
+                    <th scope="row">{% trans "Last Activity" %}</th>
+                    <td>{{ ingestion_metrics.latest_ts }}</td>
+                </tr>                
+    
+            </table>
+            </div>
+            
+            <div class="row">
+                <div class="col col-6">
+                
+                <div class="card border-blue">
+                <h5 class="card-header text-blue">{% trans "Ingested Entities" %}</h5>
+                <ul class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                    {% trans "Total" %}<span class="badge">{{ ingestion_metrics.total }}</span>
+                    </a>
+                    {% with object_metrics.total as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                    {% endwith %}
+                </ul>
+                </div>
+                </div>
+
+                <div class="card border-blue">
+                <h5 class="card-header text-blue">{% trans "Queued Entities" %}</h5>
+                <ul class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                        {% trans "Total" %}<span class="badge">{{ ingestion_metrics.queued }}</span>
+                    </a>
+                    {% with object_metrics.queued as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                    {% endwith %}     
+                </ul>
+                </div>
+
                 </div>
             </div>
-    {% endif %}
 
         </div>
+        
+    {% if not ingestion_logs_error %}
+        <div class="col col-6">
+            <div class="col col-6">
+                <div class="card border-red">
+                <h5 class="card-header text-red">{% trans "Failed Entities" %}</h5>
+                <ul class="list-group list-group-flush"> 
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                        {% trans "Total" %}<span class="badge">{{ ingestion_metrics.failed }}</span>
+                    </a>     
+                    {% with object_metrics.failed as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                    {% endwith %}
+                </ul>
+                </div>
+
+                <div class="card border-yellow">
+                <h5 class="card-header text-yellow">{% trans "Reconciled Entities" %}</h5>
+                <ul class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                        {% trans "Total" %}<span class="badge">{{ ingestion_metrics.reconciled }}</span>
+                    </a> 
+                    {% with object_metrics.reconciled as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                    {% endwith %}        
+                </ul>
+                </div>
+
+                <div class="card border-green">
+                <h5 class="card-header text-green">{% trans "Unchanged Entities" %}</h5>
+                <ul class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                        {% trans "Total" %}<span class="badge">{{ ingestion_metrics.no_changes }}</span>
+                    </a>
+                    {% with object_metrics.no_changes as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                    {% endwith %}
+                </ul>
+                </div>
+
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col col-md-12">
+            <div class="card">
+                <div class="table-responsive">
+                    {% render_table ingestion_logs_table %}
+                </div>
+                {% if is_paginated %}
+                {% include "inc/pagination.html" with page_obj=ingestion_logs_table.page total_count=total_count %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
 </div>
 
 {% endif %}
