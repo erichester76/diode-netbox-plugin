@@ -101,7 +101,7 @@ class IngestionLogsView(View):
                     
                     #Only cache entries older than 5 minutes to avoid caching queued or processing entries
                     if serialized_logs and 'ingestion_ts' in serialized_logs[0]:
-                        if int(time()) - int(serialized_logs[0]['ingestion_ts']) > 300:                        
+                        if int(time.time()) - int(serialized_logs[0]['ingestion_ts']) > 300:                        
                             cache.set(cache_key, serialized_logs, timeout=86400) 
                             cache.set(f"{cache_key}_next_token", next_token, timeout=86400)
                         
@@ -127,6 +127,7 @@ class IngestionLogsView(View):
 
                     #Only add failed entries to make log more managable to work with pagination
                     if 'Failed' in log['state']:
+                        # add * to state to show cached entries
                         if cached_logs: log['state'] = f'*{log['state']}'
                         logs.append(log)
                     
