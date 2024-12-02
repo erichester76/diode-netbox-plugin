@@ -63,7 +63,7 @@
                             <div class="col px-0">
                                 <div class="card border-0 rounded-0 mb-0 px-3">
                                     {% if row.record.change_set.data != "" and row.record.change_set.data|length > 0 %}
-                                    <pre>{{ row.record.change_set|tojson(indent:4) }}</pre>
+                                    <pre>{{ row.record.change_set|proto_to_json }}</pre>
                                     {% else %}
                                     <pre class="text-muted">None</pre>
                                     {% endif %}
