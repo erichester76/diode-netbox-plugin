@@ -109,11 +109,11 @@ class IngestionLogsView(View):
                     serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
                     
                     # Only cache entries older than 5 minutes to avoid caching queued or processing entries
-                    if serialized_logs and 'ingestion_ts' in serialized_logs[0]:
-                        if int(time.time()) - int(serialized_logs[0]['ingestion_ts']) > 300:                        
-                            cache.set(cache_key, serialized_logs, timeout=86400) 
-                            cache.set(f"{cache_key}_next_token", next_token, timeout=86400)
-                        
+                    #if serialized_logs and 'ingestion_ts' in serialized_logs[0]:
+                    #    if int(time.time()) - int(serialized_logs[0]['ingestion_ts']) > 300:                        
+                    cache.set(cache_key, serialized_logs, timeout=86400) 
+                    cache.set(f"{cache_key}_next_token", next_token, timeout=86400)
+                
                 # Create per object and state stats and only send log entries for FAILED to table for render
                 for log in serialized_logs:
                     state = log['state'].lower()
