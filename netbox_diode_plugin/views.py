@@ -164,9 +164,7 @@ class IngestionLogsView(View):
             total_minutes = (latest_activity - oldest_timestamp) // 60 if oldest_timestamp < float('inf') else 0
             requests_per_minute_avg = total_requests / total_minutes if total_minutes > 0 else 0
 
-            ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
-                only_metrics=True
-            )       
+            ingestion_metrics = reconciler_client.retrieve_ingestion_logs(only_metrics=True)       
             
             latest_ts=None
             # Create readable time stamp in correct TZ (stolen from tables.py)
@@ -174,7 +172,6 @@ class IngestionLogsView(View):
                 current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
                 ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
                 latest_ts = f"{ts.date()} {ts.time()}"
-
 
             most_failed_producer = max(most_failed_producers, key=most_failed_producers.get, default=None)
             most_failed_object_type = max(most_failed_object_types, key=most_failed_object_types.get, default=None)
@@ -194,9 +191,9 @@ class IngestionLogsView(View):
                 "sdks": counter['sdk_name'] or 0,
                 "objects" : counter['object_type'] or 0,
                 "latest_ts": latest_ts or 'Never',   
-                "most_failed_object_type": f"{most_failed_object_type} {most_failed_object_types.get(most_failed_object_type, 0)}" if most_failed_object_type else None,
-                "most_failed_producer": f"{most_failed_producer} {most_failed_object_types.get(most_failed_producer, 0)}",
-                "most_failed_request_id": f"{most_failed_request_id} {most_failed_object_types.get(most_failed_request_id, 0)}",
+                "most_failed_object_type": f"{most_failed_object_type} {most_failed_object_types.get(most_failed_object_type, 0)}",
+                "most_failed_producer": f"{most_failed_producer} {most_failed_producer.get(most_failed_producer, 0)}",
+                "most_failed_request_id": f"{most_failed_request_id} {most_failed_request_id.get(most_failed_request_id, 0)}",
                 "rpm": requests_per_minute_avg,
 
             }
