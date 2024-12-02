@@ -80,9 +80,12 @@ class IngestionLogsView(View):
         most_failed_object_types = {}
         most_failed_request_ids = {}
         latest_activity = 0
+        pages=0
 
         try:
             while True:
+                if pages > 100: 
+                    break
                 
                 # Get and cache
                 if next_token:
@@ -98,6 +101,7 @@ class IngestionLogsView(View):
 
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
+                    pages +=1
                     next_token = resp.next_page_token
                     # Serialize logs to cache them
                     serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
