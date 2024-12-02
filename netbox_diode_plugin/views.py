@@ -100,7 +100,7 @@ class IngestionLogsView(View):
                     serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
 
                     #randomize timeout so it doesnt cause one big cache refresh all at once.
-                    timeout=300+random.random(1,300)
+                    timeout=300+random.randint(1, 600)
                     cache.set(cache_key, serialized_logs, timeout=timeout) 
                     cache.set(f"{cache_key}_next_token", next_token, timeout=timeout)
                     
