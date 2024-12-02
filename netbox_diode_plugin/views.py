@@ -96,16 +96,16 @@ class IngestionLogsView(View):
                 else:
                     resp = reconciler_client.retrieve_ingestion_logs(**ingestion_logs_filters)
                     next_token = resp.next_page_token
-                    #have to serialize logs to cache them
+                    # Serialize logs to cache them
                     serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
                     
-                    #Only cache entries older than 5 minutes to avoid caching queued or processing entries
+                    #O nly cache entries older than 5 minutes to avoid caching queued or processing entries
                     if serialized_logs and 'ingestion_ts' in serialized_logs[0]:
                         if int(time.time()) - int(serialized_logs[0]['ingestion_ts']) > 300:                        
                             cache.set(cache_key, serialized_logs, timeout=86400) 
                             cache.set(f"{cache_key}_next_token", next_token, timeout=86400)
                         
-                #create per object and state stats and only send log entries for FAILED to table for render
+                # Create per object and state stats and only send log entries for FAILED to table for render
                 for log in serialized_logs:
                     state = log['state'].lower()
                     log['state'] = " ".join(log['state'].title().split("_"))
@@ -125,7 +125,7 @@ class IngestionLogsView(View):
                          
                     latest_activity = max(latest_activity, int(log['ingestion_ts']))
 
-                    #Only add failed entries to make log more managable to work with pagination
+                    # Only add failed entries to make log more managable to work with pagination
                     if 'Failed' in log['state']:
                         # add * to state to show cached entries
                         if cached_logs: log['state'] = f'*{log['state']}'
@@ -139,7 +139,7 @@ class IngestionLogsView(View):
             )       
             
             latest_ts=None
-            # create readable time stamp in correct TZ (stolen from tables.py)
+            # Create readable time stamp in correct TZ (stolen from tables.py)
             if latest_activity>0:
                 current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
                 ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
@@ -154,9 +154,9 @@ class IngestionLogsView(View):
                 "failed": ingestion_metrics.metrics.failed or 0,
                 "no_changes": ingestion_metrics.metrics.no_changes or 0,
                 "total": ingestion_metrics.metrics.total or 0,
-                "request_ids": counter['request_ids'] or 0,
-                "producers": counter['producers'] or 0,
-                "sdks": counter['sdks'] or 0,
+                "request_ids": counter['request_id'] or 0,
+                "producers": counter['producer_app_name'] or 0,
+                "sdks": counter['sdk_name'] or 0,
                 "latest_ts": latest_ts or 'Never',   
             }
 
