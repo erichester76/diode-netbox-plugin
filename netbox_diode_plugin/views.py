@@ -111,18 +111,17 @@ class IngestionLogsView(View):
                     log['state'] = " ".join(log['state'].title().split("_"))
                     _, object_type = log['data_type'].title().split(".")
 
-                    # Update per-state and total metrics
+                    # Update per-state and total object count metrics
                     obj_metrics.setdefault(state, {}).setdefault(object_type, 0)
-                    obj_metrics[state][object_type] += 1
                     obj_metrics.setdefault('total', {}).setdefault(object_type, 0)
+                    obj_metrics[state][object_type] += 1
                     obj_metrics['total'][object_type] += 1
 
+                    seen.setdefault(field, {})
                     # Update unique counters
                     for field in ['request_id', 'producer_app_name', 'sdk_name']:
-                        seen.setdefault(field, {}).setdefault(log[field], False)
-                        #if not field in seen: seen[field]={}
-                        if not seen[field][log[field]]:
-                            seen[field][log[field]]=True
+                        if log[field] not in seen[field]:
+                            seen.setdefault(field, {}).setdefault(log[field], True)
                             counter[field] += 1
                          
                     latest_activity = max(latest_activity, int(log['ingestion_ts']))
