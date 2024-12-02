@@ -126,7 +126,7 @@ class IngestionLogsView(View):
                     for field in ['request_id', 'producer_app_name', 'sdk_name', 'data_type']:
                         if log[field] not in seen[field]:
                             seen[field][log[field]]=True
-                            if field == 'data_type': field=object_type
+                            if field == 'data_type': field='object_type'
                             counter[field] += 1
                          
                     latest_activity = max(latest_activity, int(log['ingestion_ts']))
@@ -177,6 +177,7 @@ class IngestionLogsView(View):
                 "request_ids": counter['request_id'] or 0,
                 "producers": counter['producer_app_name'] or 0,
                 "sdks": counter['sdk_name'] or 0,
+                "objects" : counter['object_type'] or 0,
                 "latest_ts": latest_ts or 'Never',   
                 "most_failed_object_type": f"{most_failed_object_type} {most_failed_object_types.get(most_failed_object_type, 0)}" if most_failed_object_type else None,
                 "most_failed_producer": f"{most_failed_producer} {most_failed_object_types.get(most_failed_producer, 0)}",
