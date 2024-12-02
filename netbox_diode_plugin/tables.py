@@ -61,37 +61,37 @@ class IngestionLogsTable(BaseTable):
     ingestion_ts = TimestampColumn(
         verbose_name="Ingestion Timestamp",
         accessor="ingestion_ts",
-        orderable=True,
+        orderable=False,
     )
 
     state = tables.Column(
         verbose_name="State",
         accessor="state",
-        orderable=True,
+        orderable=False,
     )
 
     object_type = DataTypeColumn(
         verbose_name="Data Type",
         accessor="data_type",
-        orderable=True,
+        orderable=False,
     )
 
     request_id = tables.Column(
         verbose_name="Request ID",
         accessor="request_id",
-        orderable=True,
+        orderable=False,
     )
 
     producer = tables.Column(
         verbose_name="Producer",
         accessor="producer_app_name",
-        orderable=True,
+        orderable=False,
     )
 
     sdk = tables.Column(
         verbose_name="SDK",
         accessor="sdk_name",
-        orderable=True,
+        orderable=False,
     )
 
     actions = tables.TemplateColumn(
