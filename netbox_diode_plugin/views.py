@@ -182,7 +182,7 @@ class IngestionLogsView(View):
             metrics = {
                 "queued": ingestion_metrics.metrics.queued or 0,
                 "reconciled": ingestion_metrics.metrics.reconciled or 0,
-                "failed": total_requests, #ingestion_metrics.metrics.failed or 0,
+                "failed": ingestion_metrics.metrics.failed or 0,
                 "no_changes": ingestion_metrics.metrics.no_changes or 0,
                 "total": ingestion_metrics.metrics.total or 0,
                 "request_ids": counter['request_id'] or 0,
