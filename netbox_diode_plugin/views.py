@@ -74,7 +74,7 @@ class IngestionLogsView(View):
 
         logs = []
         next_token = None
-        objmetrics = {}
+        obj_metrics = {}
         seen={}
         seen['request_id']={}
         request_ids = 0
@@ -113,16 +113,16 @@ class IngestionLogsView(View):
                     log['state']=" ".join(log['state'].title().split("_"))
                     _,object_type = log['data_type'].title().split(".")
                       
-                    if state not in objmetrics:
-                        objmetrics[state] = {}
-                    if object_type not in objmetrics[state]:
-                        objmetrics[state][object_type] = 0
-                    if 'total' not in objmetrics[state]:
-                        objmetrics[state]['total'] = 0
+                    if state not in obj_metrics:
+                        obj_metrics[state] = {}
+                    if object_type not in obj_metrics[state]:
+                        obj_metrics[state][object_type] = 0
+                    if 'total' not in obj_metrics[state]:
+                        obj_metrics[state]['total'] = 0
                         
 
-                    objmetrics[state][object_type] += 1
-                    objmetrics['total'][object_type] += 1
+                    obj_metrics[state][object_type] += 1
+                    obj_metrics['total'][object_type] += 1
                     
                     if log['request_id'] not in seen['request_id']:
                         seen['request_id'][log['request_id']]=True
@@ -170,14 +170,13 @@ class IngestionLogsView(View):
                 "request_ids": request_ids,
                 "producers": producers,
                 "sdks": sdks,
-                "latest_ts": latest_ts,
-                
+                "latest_ts": latest_ts,   
             }
 
             context = {
                 "ingestion_logs_table": table,
                 "ingestion_metrics": metrics,
-                "object_metrics": objmetrics,
+                "object_metrics": obj_metrics,
                 "diode_target": diode_target,
                 "total_count": ingestion_metrics.metrics.total,
             }
