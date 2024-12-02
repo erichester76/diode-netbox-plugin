@@ -149,10 +149,14 @@ class IngestionLogsView(View):
                 only_metrics=True
             )       
             
+            latest_ts=None
             # create readable time stamp in correct TZ (stolen from tables.py)
-            current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
-            ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
-            latest_ts = f"{ts.date()} {ts.time()}"
+            if latest_activity>0:
+                current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
+                ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
+                latest_ts = f"{ts.date()} {ts.time()}"
+            else:
+                latest_ts="Never"
 
             table = IngestionLogsTable(logs)
             RequestConfig(request, paginate={"per_page": 20}).configure(table)
