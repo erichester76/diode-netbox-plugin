@@ -67,22 +67,15 @@ class IngestionLogsView(View):
             target=diode_target,
             api_key=token.key,
         )
-        page_size = 50
+       
+        #small cache blocks so they timeout independently 
+        page_size = 20
         ingestion_logs_filters = {"page_size": page_size}
-        request_page_token = request.GET.get("page_token")
-        if request_page_token:
-            ingestion_logs_filters["page_token"] = request_page_token
-
         logs = []
         next_token = None
         obj_metrics = {}
-        seen={}
-        seen['request_id']={}
-        request_ids = 0
-        seen['producer_app_name']={}
-        producers = 0
-        seen['sdk_name']={}
-        sdks = 0
+        counter = {}
+        seen = {}
         latest_activity = 0
 
         try:
@@ -114,41 +107,29 @@ class IngestionLogsView(View):
                 #create per object and state stats and only send log entries for FAILED to table for render
                 for log in serialized_logs:
                     state = log['state'].lower()
-                    log['state']=" ".join(log['state'].title().split("_"))
-                    _,object_type = log['data_type'].title().split(".")
-                      
-                    if state not in obj_metrics:
-                        obj_metrics[state] = {}
-                    if object_type not in obj_metrics[state]:
-                        obj_metrics[state][object_type] = 0
-                    if 'total' not in obj_metrics:
-                        obj_metrics['total'] = 0
-                    if object_type not in obj_metrics['total']:
-                        obj_metrics['total'][object_type] = 0
+                    log['state'] = " ".join(log['state'].title().split("_"))
+                    _, object_type = log['data_type'].title().split(".")
 
+                    # Update per-state and total metrics
+                    obj_metrics.setdefault(state, {}).setdefault(object_type, 0)
                     obj_metrics[state][object_type] += 1
+                    obj_metrics.setdefault('total', {}).setdefault(object_type, 0)
                     obj_metrics['total'][object_type] += 1
-                    
-                    if log['request_id'] not in seen['request_id']:
-                        seen['request_id'][log['request_id']]=True
-                        request_ids += 1
-                    if log['producer_app_name'] not in seen['producer_app_name']:
-                        seen['producer_app_name'][log['producer_app_name']]=True
-                        producers += 1
-                    if log['sdk_name'] not in seen['sdk_name']:
-                        seen['sdk_name'][log['sdk_name']]=True
-                        sdks += 1   
+
+                    # Update unique counters
+                    for field in ['request_id', 'producer_app_name', 'sdk_name']:
+                        if log[field] not in seen[field]:
+                            seen[field][log[field]] = True
+                            counter[field] += 1
                          
-                    if int(log['ingestion_ts'])>latest_activity:
-                        latest_activity = int(log['ingestion_ts'])
-                        
+                    latest_activity = max(latest_activity, int(log['ingestion_ts']))
+
                     #Only add failed entries to make log more managable to work with pagination
                     if 'Failed' in log['state']:
                         logs.append(log)
                     
                 if not next_token:
                     break
-
 
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
                 only_metrics=True
@@ -160,8 +141,6 @@ class IngestionLogsView(View):
                 current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
                 ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
                 latest_ts = f"{ts.date()} {ts.time()}"
-            else:
-                latest_ts="Never"
 
             table = IngestionLogsTable(logs)
             RequestConfig(request, paginate={"per_page": 20}).configure(table)
@@ -172,10 +151,10 @@ class IngestionLogsView(View):
                 "failed": ingestion_metrics.metrics.failed or 0,
                 "no_changes": ingestion_metrics.metrics.no_changes or 0,
                 "total": ingestion_metrics.metrics.total or 0,
-                "request_ids": request_ids,
-                "producers": producers,
-                "sdks": sdks,
-                "latest_ts": latest_ts,   
+                "request_ids": counter['request_ids'] or 0,
+                "producers": counter['producers'] or 0,
+                "sdks": counter['sdks'] or 0,
+                "latest_ts": latest_ts or 'Never',   
             }
 
             context = {
