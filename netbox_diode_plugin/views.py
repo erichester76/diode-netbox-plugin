@@ -82,7 +82,7 @@ class IngestionLogsView(View):
         try:
             while True:
                 
-                #Get and cache logs and on subsequent calls just get non cached pages
+                # Get and cache
                 if next_token:
                     ingestion_logs_filters["page_token"] = next_token
                     
@@ -100,7 +100,7 @@ class IngestionLogsView(View):
                     # Serialize logs to cache them
                     serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
                     
-                    #O nly cache entries older than 5 minutes to avoid caching queued or processing entries
+                    # Only cache entries older than 5 minutes to avoid caching queued or processing entries
                     if serialized_logs and 'ingestion_ts' in serialized_logs[0]:
                         if int(time.time()) - int(serialized_logs[0]['ingestion_ts']) > 300:                        
                             cache.set(cache_key, serialized_logs, timeout=86400) 
