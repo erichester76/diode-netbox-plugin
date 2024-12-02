@@ -34,7 +34,7 @@
                         {% trans "Offline" as status %}
                         {% badge status "red" %}
                     {% elif ingestion_metrics.queued > 0 %}
-                        {% trans "Ingesting" as status %}
+                        {% trans "Processing" as status %}
                         {% badge status "blue" %}  
                     {% else %}
                         {% trans "Online" as status %}
@@ -66,10 +66,12 @@
                     <td>{{ ingestion_metrics.latest_ts }}</td>
                 </tr>                
     
-            </table>
+              </table>
+              </div>
             </div>
-            </div>
-            <div class="row">                
+
+            <div class="row">    
+              <div class="col md-6">           
                 <div class="card border-blue">
                 <h5 class="card-header text-blue">{% trans "Ingested Entities" %}</h5>
                 <ul class="list-group list-group-flush">
@@ -85,9 +87,7 @@
                     {% endwith %}
                 </ul>
                 </div>
-            </div>
 
-            <div class="row">
                 <div class="card border-blue">
                 <h5 class="card-header text-blue">{% trans "Queued Entities" %}</h5>
                 <ul class="list-group list-group-flush">
@@ -103,10 +103,8 @@
                     {% endwith %}     
                 </ul>
                 </div>
-
             </div>
          </div>
-        </div>
     {% if not ingestion_logs_error %}
         <div class="col col-6">
             <div class="col col-6">
