@@ -3,8 +3,8 @@
 """Diode NetBox Plugin - Views."""
 import os
 import datetime
+import time
 import zoneinfo
-import random
 
 from django.conf import settings as netbox_settings
 from django.contrib import messages
@@ -98,12 +98,13 @@ class IngestionLogsView(View):
                     next_token = resp.next_page_token
                     #have to serialize logs to cache them
                     serialized_logs=[MessageToDict(log, preserving_proto_field_name=True) for log in resp.logs]
-
-                    #randomize timeout so it doesnt cause one big cache refresh all at once.
-                    timeout=300+random.randint(1, 600)
-                    cache.set(cache_key, serialized_logs, timeout=timeout) 
-                    cache.set(f"{cache_key}_next_token", next_token, timeout=timeout)
                     
+                    #Only cache entries older than 5 minutes to avoid caching queued or processing entries
+                    if serialized_logs and 'ingestion_ts' in serialized_logs[0]:
+                        if int(time()) - int(serialized_logs[0]['ingestion_ts']) > 300:                        
+                            cache.set(cache_key, serialized_logs, timeout=86400) 
+                            cache.set(f"{cache_key}_next_token", next_token, timeout=86400)
+                        
                 #create per object and state stats and only send log entries for FAILED to table for render
                 for log in serialized_logs:
                     state = log['state'].lower()
