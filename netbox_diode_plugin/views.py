@@ -35,7 +35,6 @@ import logging
 
 User = get_user_model()
 logger=logging.getLogger()
-cache.clear
 
 class IngestionLogsView(View):
     """Ingestion logs view."""
