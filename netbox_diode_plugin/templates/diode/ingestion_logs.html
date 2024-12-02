@@ -105,58 +105,58 @@
                     </div>
                 </div>
             </div>
+        </div>
             {% if not ingestion_logs_error %}
+        <div class="col col-6">
             <div class="col col-6">
-                <div class="col col-6">
-                    <div class="card border-red">
-                        <h5 class="card-header text-red">{% trans "Failed Entities" %}</h5>
-                        <ul class="list-group list-group-flush"> 
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {% trans "Total" %}<span class="badge">{{ ingestion_metrics.failed }}</span>
-                            </a>     
-                            {% with object_metrics.failed as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                            {% endwith %}
-                        </ul>
-                    </div>
-
-                    <div class="card border-yellow">
-                        <h5 class="card-header text-yellow">{% trans "Reconciled Entities" %}</h5>
-                        <ul class="list-group list-group-flush">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {% trans "Total" %}<span class="badge">{{ ingestion_metrics.reconciled }}</span>
-                            </a> 
-                            {% with object_metrics.reconciled as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                            {% endwith %}        
-                        </ul>
-                    </div>
-
-                    <div class="card border-green">
-                        <h5 class="card-header text-green">{% trans "Unchanged Entities" %}</h5>
-                        <ul class="list-group list-group-flush">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {% trans "Total" %}<span class="badge">{{ ingestion_metrics.no_changes }}</span>
-                            </a>
-                            {% with object_metrics.no_changes as ometrics %}
-                            {% for object_type, count in ometrics.items %}
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
-                                {{ object_type }}<span class="badge">{{ count }}</span>
-                            </a>                        
-                            {% endfor %}
-                            {% endwith %}
-                        </ul>
-                    </div>
-
+                <div class="card border-red">
+                    <h5 class="card-header text-red">{% trans "Failed Entities" %}</h5>
+                    <ul class="list-group list-group-flush"> 
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.failed }}</span>
+                        </a>     
+                        {% with object_metrics.failed as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                        {% endwith %}
+                    </ul>
                 </div>
+
+                <div class="card border-yellow">
+                    <h5 class="card-header text-yellow">{% trans "Reconciled Entities" %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.reconciled }}</span>
+                        </a> 
+                        {% with object_metrics.reconciled as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                        {% endwith %}        
+                    </ul>
+                </div>
+
+                <div class="card border-green">
+                    <h5 class="card-header text-green">{% trans "Unchanged Entities" %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {% trans "Total" %}<span class="badge">{{ ingestion_metrics.no_changes }}</span>
+                        </a>
+                        {% with object_metrics.no_changes as ometrics %}
+                        {% for object_type, count in ometrics.items %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">
+                            {{ object_type }}<span class="badge">{{ count }}</span>
+                        </a>                        
+                        {% endfor %}
+                        {% endwith %}
+                    </ul>
+                </div>
+
             </div>
         </div>
     </div>
