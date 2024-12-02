@@ -153,10 +153,10 @@ class IngestionLogsView(View):
                             most_failed_request_ids.get(log['request_id'], 0) + 1
                         )
                         # add * to state to show cached entries
-                        if cached_logs: log['state'] = f'{log['state']}'
+                        if cached_logs: log['state'] = f'**{log['state']}'
                         logs.append(log)
                     
-                if not next_token or pages > 500:
+                if not next_token:
                     break
 
             # Calculate the requests per minute
