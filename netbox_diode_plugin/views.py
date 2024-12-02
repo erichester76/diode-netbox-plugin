@@ -177,7 +177,7 @@ class IngestionLogsView(View):
             most_failed_request_id = max(most_failed_request_ids, key=most_failed_request_ids.get, default=None)
 
             table = IngestionLogsTable(logs)
-            RequestConfig(request, paginate={"per_page": 20}).configure(table)
+            RequestConfig(request, paginate={"per_page": 100}).configure(table)
             
             metrics = {
                 "queued": ingestion_metrics.metrics.queued or 0,
