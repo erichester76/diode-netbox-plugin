@@ -84,8 +84,6 @@ class IngestionLogsView(View):
 
         try:
             while True:
-                if pages > 100: 
-                    break
                 
                 # Get and cache
                 if next_token:
@@ -148,7 +146,7 @@ class IngestionLogsView(View):
                         if cached_logs: log['state'] = f'*{log['state']}'
                         logs.append(log)
                     
-                if not next_token:
+                if not next_token or pages > 500:
                     break
 
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
@@ -180,7 +178,7 @@ class IngestionLogsView(View):
                 "producers": counter['producer_app_name'] or 0,
                 "sdks": counter['sdk_name'] or 0,
                 "latest_ts": latest_ts or 'Never',   
-                "most_failed_object_type": f"{most_failed_object_type} {most_failed_object_types.get(most_failed_object_type, 0)}",
+                "most_failed_object_type": f"{most_failed_object_type} {most_failed_object_types.get(most_failed_object_type, 0)}" if most_failed_object_type else None,
                 "most_failed_producer": f"{most_failed_producer} {most_failed_object_types.get(most_failed_producer, 0)}",
                 "most_failed_request_id": f"{most_failed_request_id} {most_failed_object_types.get(most_failed_request_id, 0)}",
 
