@@ -5,6 +5,7 @@ import os
 import datetime
 import time
 import zoneinfo
+from collections import defaultdict
 
 from django.conf import settings as netbox_settings
 from django.contrib import messages
@@ -76,6 +77,8 @@ class IngestionLogsView(View):
         obj_metrics = {}
         seen = {field: {} for field in ['request_id', 'producer_app_name', 'sdk_name', 'data_type']}
         counter = {'request_id': 0, 'producer_app_name': 0, 'sdk_name': 0, 'object_type': 0}
+        requests_per_minute = defaultdict(int)  # To track the count of requests per minute
+
         most_failed_producers = {}
         most_failed_object_types = {}
         most_failed_request_ids = {}
@@ -128,6 +131,12 @@ class IngestionLogsView(View):
                             seen[field][log[field]]=True
                             if field == 'data_type': field='object_type'
                             counter[field] += 1
+                            
+                    # Track requests per minute (group by minute)
+                    timestamp = int(log['ingestion_ts'])
+                    minute_key = timestamp // 60  # Group by minute (epoch seconds divided by 60)
+                    requests_per_minute[minute_key] += 1
+
                          
                     latest_activity = max(latest_activity, int(log['ingestion_ts']))
 
@@ -148,6 +157,11 @@ class IngestionLogsView(View):
                     
                 if not next_token or pages > 500:
                     break
+
+            # Calculate the requests per minute
+            total_requests = sum(requests_per_minute.values())
+            total_minutes = (latest_activity - oldest_timestamp) // 60 if oldest_timestamp < float('inf') else 0
+            requests_per_minute_avg = total_requests / total_minutes if total_minutes > 0 else 0
 
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(
                 only_metrics=True
@@ -182,6 +196,7 @@ class IngestionLogsView(View):
                 "most_failed_object_type": f"{most_failed_object_type} {most_failed_object_types.get(most_failed_object_type, 0)}" if most_failed_object_type else None,
                 "most_failed_producer": f"{most_failed_producer} {most_failed_object_types.get(most_failed_producer, 0)}",
                 "most_failed_request_id": f"{most_failed_request_id} {most_failed_object_types.get(most_failed_request_id, 0)}",
+                "rpm": requests_per_minute_avg,
 
             }
 
