@@ -12,8 +12,6 @@ if version.parse(settings.VERSION).major >= 4:
 else:
     from django.contrib.contenttypes.models import ContentType as NetBoxType
 from django.core.exceptions import FieldError
-from django.core.cache import cache
-
 from django.db import transaction
 from django.db.models import Q
 from extras.models import CachedValue
@@ -62,7 +60,6 @@ class ObjectStateView(views.APIView):
             return ("site",)
         return ()
 
-
     def get(self, request, *args, **kwargs):
         """
         Return a JSON with object_type, object_change_id, and object.
@@ -71,7 +68,7 @@ class ObjectStateView(views.APIView):
         If the obj_type parameter is not in the parameters, raise a ValidationError.
         When object ID is provided in the request, search using it in the model specified by object type.
         If ID is not provided, use the q parameter for searching.
-        Lookup is iexact.
+        Lookup is iexact
         """
         object_type = self.request.query_params.get("object_type", None)
 
@@ -87,12 +84,7 @@ class ObjectStateView(views.APIView):
         object_id = self.request.query_params.get("id", None)
 
         if object_id:
-            cache_key = f"queryset_{object_type}_{object_id}"
-            queryset = cache.get(cache_key)
-
-            if queryset is None:
-                queryset = object_type_model.objects.filter(id=object_id)
-                cache.set(cache_key, queryset, timeout=60)  # Cache for 60 seconds
+            queryset = object_type_model.objects.filter(id=object_id)
         else:
             lookup = LookupTypes.EXACT
             search_value = self.request.query_params.get("q", None)
@@ -106,28 +98,14 @@ class ObjectStateView(views.APIView):
                 query_filter
             ).values_list("object_id", flat=True)
 
-            # CACHE HERE
-            cache_key = f"queryset_{object_type}_{search_value}"
-            queryset = cache.get(cache_key)
-
-            if queryset is None:
-                queryset = object_type_model.objects.filter(
-                    id__in=object_id_in_cached_value
-                )
-                cache.set(cache_key, queryset, timeout=60)  # Cache for 60 seconds
+            queryset = object_type_model.objects.filter(
+                id__in=object_id_in_cached_value
+            )
 
             lookups = self._get_lookups(str(object_type_model).lower())
 
             if lookups:
-                # CACHE PREFETCH HERE
-                prefetch_cache_key = f"prefetch_{object_type}_{search_value}"
-                prefetch_queryset = cache.get(prefetch_cache_key)
-
-                if prefetch_queryset is None:
-                    prefetch_queryset = queryset.prefetch_related(*lookups)
-                    cache.set(prefetch_cache_key, prefetch_queryset, timeout=60)  # Cache for 60 seconds
-
-                queryset = prefetch_queryset
+                queryset = queryset.prefetch_related(*lookups)
 
             additional_attributes_query_filter = (
                 self._additional_attributes_query_filter()
@@ -135,15 +113,7 @@ class ObjectStateView(views.APIView):
 
             if additional_attributes_query_filter:
                 try:
-                    # CACHE FILTER HERE
-                    filter_cache_key = f"filtered_{object_type}_{search_value}"
-                    filtered_queryset = cache.get(filter_cache_key)
-
-                    if filtered_queryset is None:
-                        filtered_queryset = queryset.filter(**additional_attributes_query_filter)
-                        cache.set(filter_cache_key, filtered_queryset, timeout=60)  # Cache for 60 seconds
-
-                    queryset = filtered_queryset
+                    queryset = queryset.filter(**additional_attributes_query_filter)
                 except (FieldError, ValueError):
                     return Response(
                         {"errors": ["invalid additional attributes provided"]},
@@ -170,7 +140,6 @@ class ObjectStateView(views.APIView):
                 {"errors": [f"Serializer error: {e.args[0]}"]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
     def _additional_attributes_query_filter(self):
         """Get the additional attributes query filter."""
