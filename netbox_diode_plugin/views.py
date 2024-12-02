@@ -74,8 +74,9 @@ class IngestionLogsView(View):
         logs = []
         next_token = None
         obj_metrics = {}
-        counter = {}
-        seen = {}
+        seen = {field: {} for field in ['request_id', 'producer_app_name', 'sdk_name']}
+        counter = {'request_id': 0, 'producer_app_name': 0, 'sdk_name': 0}
+
         latest_activity = 0
 
         try:
@@ -117,11 +118,10 @@ class IngestionLogsView(View):
                     obj_metrics[state][object_type] += 1
                     obj_metrics['total'][object_type] += 1
 
-                    seen.setdefault(field, {})
                     # Update unique counters
                     for field in ['request_id', 'producer_app_name', 'sdk_name']:
                         if log[field] not in seen:
-                            seen.setdefault(field, {}).setdefault(log[field], True)
+                            seen[field][log[field]]=True
                             counter[field] += 1
                          
                     latest_activity = max(latest_activity, int(log['ingestion_ts']))
