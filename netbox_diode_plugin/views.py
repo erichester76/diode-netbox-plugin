@@ -35,6 +35,7 @@ import logging
 
 User = get_user_model()
 logger=logging.getLogger()
+cache.clear
 
 class IngestionLogsView(View):
     """Ingestion logs view."""
@@ -156,7 +157,7 @@ class IngestionLogsView(View):
                         if cached_logs: log['state'] = f'**{log['state']}'
                         logs.append(log)
                     
-                if not next_token:
+                if not next_token or pages > 500:
                     break
 
             # Calculate the requests per minute
