@@ -111,7 +111,7 @@ class IngestionLogsView(View):
                 for log in serialized_logs:
                     state = log['state'].lower()
                     log['state']=" ".join(log['state'].title().split("_"))
-                    object_type = " ".join(log['data_type'].title().split("_"))
+                    _,object_type = log['data_type'].title().split(".")
                       
                     if state not in objmetrics:
                         objmetrics[state] = {}
@@ -122,7 +122,7 @@ class IngestionLogsView(View):
                         
 
                     objmetrics[state][object_type] += 1
-                    objmetrics[state]['total'] += 1
+                    objmetrics['total'][object_type] += 1
                     
                     if log['request_id'] not in seen['request_id']:
                         seen['request_id'][log['request_id']]=True
