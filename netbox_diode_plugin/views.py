@@ -69,7 +69,7 @@ class IngestionLogsView(View):
         )
        
         #small cache blocks so they timeout independently 
-        page_size = 20
+        page_size = 100
         ingestion_logs_filters = {"page_size": page_size}
         logs = []
         next_token = None
@@ -121,9 +121,10 @@ class IngestionLogsView(View):
                     obj_metrics['total'][object_type] += 1
 
                     # Update unique counters
-                    for field in ['request_id', 'producer_app_name', 'sdk_name']:
+                    for field in ['request_id', 'producer_app_name', 'sdk_name', 'data_type']:
                         if log[field] not in seen[field]:
                             seen[field][log[field]]=True
+                            if field == 'data_type': field=object_type
                             counter[field] += 1
                          
                     latest_activity = max(latest_activity, int(log['ingestion_ts']))
