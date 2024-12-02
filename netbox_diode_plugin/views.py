@@ -154,7 +154,7 @@ class IngestionLogsView(View):
                             most_failed_request_ids.get(log['request_id'], 0) + 1
                         )
                         # add * to state to show cached entries
-                        if cached_logs: log['ingestion_ts'] = f'{log['ingestion_ts']}*'
+                        if cached_logs: log['request_id'] = f'{log['request_id']}*'
                         logs.append(log)
                     
                 if not next_token or pages > 500:
