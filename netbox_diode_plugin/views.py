@@ -179,6 +179,7 @@ class IngestionLogsView(View):
                 "ingestion_metrics": metrics,
                 "object_metrics": objmetrics,
                 "diode_target": diode_target,
+                "total_count": ingestion_metrics.metrics.total,
             }
 
         except ReconcilerClientError as error:
