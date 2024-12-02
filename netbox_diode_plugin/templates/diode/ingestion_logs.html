@@ -67,6 +67,8 @@
         
                 </table>
                 </div>
+                <div class="row">
+                  <div class="col col-6">
                     <div class="card border-blue">
                     <h5 class="card-header text-blue">{% trans "Ingested Entities" %}</h5>
                     <ul class="list-group list-group-flush">
@@ -81,13 +83,12 @@
                             {% endfor %}
                         {% endwith %}
                     </ul>
-                    </div>
+                   </div>
                 </div>
             </div>
 
             {% if not ingestion_logs_error %}
             <div class="col col-6">
-
                     <div class="card border-red">
                     <h5 class="card-header text-red">{% trans "Failed Entities" %}</h5>
                     <ul class="list-group list-group-flush"> 
