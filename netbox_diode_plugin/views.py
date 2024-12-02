@@ -127,6 +127,7 @@ class IngestionLogsView(View):
 
                     #Only add failed entries to make log more managable to work with pagination
                     if 'Failed' in log['state']:
+                        if cached_logs: log['state'] = f'*{log['state']}'
                         logs.append(log)
                     
                 if not next_token:
