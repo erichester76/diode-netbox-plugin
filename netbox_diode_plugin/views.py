@@ -83,6 +83,7 @@ class IngestionLogsView(View):
         most_failed_object_types = {}
         most_failed_request_ids = {}
         latest_activity = 0
+        oldest_timestamp = float('inf')
         pages=0
 
         try:
@@ -136,8 +137,8 @@ class IngestionLogsView(View):
                     timestamp = int(log['ingestion_ts'])
                     minute_key = timestamp // 60  # Group by minute (epoch seconds divided by 60)
                     requests_per_minute[minute_key] += 1
-
-                         
+                    
+                    oldest_timestamp = min(oldest_timestamp, int(log['ingestion_ts']))
                     latest_activity = max(latest_activity, int(log['ingestion_ts']))
 
                     # Only add failed entries to make log more managable to work with pagination
