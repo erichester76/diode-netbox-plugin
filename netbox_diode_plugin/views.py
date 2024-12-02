@@ -120,7 +120,7 @@ class IngestionLogsView(View):
                     seen.setdefault(field, {})
                     # Update unique counters
                     for field in ['request_id', 'producer_app_name', 'sdk_name']:
-                        if log[field] not in seen[field]:
+                        if log[field] not in seen:
                             seen.setdefault(field, {}).setdefault(log[field], True)
                             counter[field] += 1
                          
