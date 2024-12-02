@@ -153,7 +153,7 @@ class IngestionLogsView(View):
                             most_failed_request_ids.get(log['request_id'], 0) + 1
                         )
                         # add * to state to show cached entries
-                        if cached_logs: log['state'] = f'*{log['state']}'
+                        if cached_logs: log['state'] = f'{log['state']}'
                         logs.append(log)
                     
                 if not next_token or pages > 500:
@@ -161,13 +161,11 @@ class IngestionLogsView(View):
 
             # Calculate the requests per minute
             total_requests = sum(requests_per_minute.values())
-            total_minutes = (latest_activity - oldest_timestamp) // 60 if oldest_timestamp < float('inf') else 0
+            total_minutes = (latest_activity - oldest_timestamp) / 60 if oldest_timestamp < float('inf') else 0
             requests_per_minute_avg = total_requests / total_minutes if total_minutes > 0 else 0
-
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(only_metrics=True)       
             
             latest_ts=None
-            # Create readable time stamp in correct TZ (stolen from tables.py)
             if latest_activity>0:
                 current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
                 ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
