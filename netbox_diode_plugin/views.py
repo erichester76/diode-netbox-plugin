@@ -162,7 +162,7 @@ class IngestionLogsView(View):
             # Calculate the requests per minute
             total_requests = sum(requests_per_minute.values())
             total_minutes = len(requests_per_minute)  # Unique minutes with activity
-            requests_per_minute_avg = total_requests / total_minutes if total_minutes > 0 else 0
+            requests_per_minute_avg = total_requests // total_minutes if total_minutes > 0 else 0
         
             ingestion_metrics = reconciler_client.retrieve_ingestion_logs(only_metrics=True)       
             
