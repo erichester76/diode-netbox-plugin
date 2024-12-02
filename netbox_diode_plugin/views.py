@@ -191,9 +191,9 @@ class IngestionLogsView(View):
                 "sdks": counter['sdk_name'] or 0,
                 "objects" : counter['object_type'] or 0,
                 "latest_ts": latest_ts or 'Never',   
-                "most_failed_object_type": f"{most_failed_object_type}: {most_failed_object_type.get(most_failed_object_type, 0)}",
-                "most_failed_producer": f"{most_failed_producer}: {most_failed_producer.get(most_failed_producer, 0)}",
-                "most_failed_request_id": f"{most_failed_request_id}: {most_failed_request_id.get(most_failed_request_id, 0)}",
+                "most_failed_object_type": f"{most_failed_object_type}: {most_failed_object_types.get(most_failed_object_type, 0)}",
+                "most_failed_producer": f"{most_failed_producer}: {most_failed_producers.get(most_failed_producer, 0)}",
+                "most_failed_request_id": f"{most_failed_request_id}: {most_failed_request_ids.get(most_failed_request_id, 0)}",
                 "rpm": requests_per_minute_avg,
 
             }
