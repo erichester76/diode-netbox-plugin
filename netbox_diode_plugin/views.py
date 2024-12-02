@@ -121,9 +121,10 @@ class IngestionLogsView(View):
                         obj_metrics[state] = {}
                     if object_type not in obj_metrics[state]:
                         obj_metrics[state][object_type] = 0
-                    if 'total' not in obj_metrics[state]:
-                        obj_metrics[state]['total'] = 0
-                        
+                    if 'total' not in obj_metrics:
+                        obj_metrics['total'] = 0
+                    if object_type not in obj_metrics['total']:
+                        obj_metrics['total'][object_type] = 0
 
                     obj_metrics[state][object_type] += 1
                     obj_metrics['total'][object_type] += 1
