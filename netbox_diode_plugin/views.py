@@ -159,12 +159,11 @@ class IngestionLogsView(View):
                 if not next_token or pages > 500:
                     break
 
-            # Calculate the requests per minute
+           # Calculate total requests and total minutes
             total_requests = sum(requests_per_minute.values())
-            total_minutes = (latest_activity - oldest_timestamp) / 60 if oldest_timestamp < float('inf') else 0
+            total_minutes = len(requests_per_minute)  # Unique minutes with activity
             requests_per_minute_avg = total_requests / total_minutes if total_minutes > 0 else 0
-            ingestion_metrics = reconciler_client.retrieve_ingestion_logs(only_metrics=True)       
-            
+                        
             latest_ts=None
             if latest_activity>0:
                 current_tz = zoneinfo.ZoneInfo(netbox_settings.TIME_ZONE)
