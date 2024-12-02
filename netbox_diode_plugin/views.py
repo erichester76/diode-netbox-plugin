@@ -74,8 +74,8 @@ class IngestionLogsView(View):
         logs = []
         next_token = None
         obj_metrics = {}
-        seen = {field: {} for field in ['request_id', 'producer_app_name', 'sdk_name']}
-        counter = {'request_id': 0, 'producer_app_name': 0, 'sdk_name': 0}
+        seen = {field: {} for field in ['request_id', 'producer_app_name', 'sdk_name', 'data_type']}
+        counter = {'request_id': 0, 'producer_app_name': 0, 'sdk_name': 0, 'object_type': 0}
         most_failed_producers = {}
         most_failed_object_types = {}
         most_failed_request_ids = {}
