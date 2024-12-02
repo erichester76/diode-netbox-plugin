@@ -76,7 +76,9 @@ class IngestionLogsView(View):
         obj_metrics = {}
         seen = {field: {} for field in ['request_id', 'producer_app_name', 'sdk_name']}
         counter = {'request_id': 0, 'producer_app_name': 0, 'sdk_name': 0}
-
+        most_failed_producers = {}
+        most_failed_object_types = {}
+        most_failed_request_ids = {}
         latest_activity = 0
 
         try:
@@ -128,6 +130,15 @@ class IngestionLogsView(View):
 
                     # Only add failed entries to make log more managable to work with pagination
                     if 'Failed' in log['state']:
+                        most_failed_producers[log['producer_app_name']] = (
+                            most_failed_producers.get(log['producer_app_name'], 0) + 1
+                        )
+                        most_failed_object_types[object_type] = (
+                            most_failed_object_types.get(object_type, 0) + 1
+                        )
+                        most_failed_request_ids[log['request_id']] = (
+                            most_failed_request_ids.get(log['request_id'], 0) + 1
+                        )
                         # add * to state to show cached entries
                         if cached_logs: log['state'] = f'*{log['state']}'
                         logs.append(log)
@@ -146,6 +157,11 @@ class IngestionLogsView(View):
                 ts = datetime.datetime.fromtimestamp(int(latest_activity) / 1_000_000_000).astimezone(current_tz)
                 latest_ts = f"{ts.date()} {ts.time()}"
 
+
+            most_failed_producer = max(most_failed_producers, key=most_failed_producers.get, default=None)
+            most_failed_object_type = max(most_failed_object_types, key=most_failed_object_types.get, default=None)
+            most_failed_request_id = max(most_failed_request_ids, key=most_failed_request_ids.get, default=None)
+
             table = IngestionLogsTable(logs)
             RequestConfig(request, paginate={"per_page": 20}).configure(table)
             
@@ -159,6 +175,10 @@ class IngestionLogsView(View):
                 "producers": counter['producer_app_name'] or 0,
                 "sdks": counter['sdk_name'] or 0,
                 "latest_ts": latest_ts or 'Never',   
+                "most_failed_object_type": f"{most_failed_object_type} {most_failed_object_types.get(most_failed_object_type, 0)}",
+                "most_failed_producer": f"{most_failed_producer} {most_failed_object_types.get(most_failed_producer, 0)}",
+                "most_failed_request_id": f"{most_failed_request_id} {most_failed_object_types.get(most_failed_request_id, 0)}",
+
             }
 
             context = {
